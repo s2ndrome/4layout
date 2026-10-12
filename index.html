@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>인스타 메이커</title>
+<meta name="description" content="인스타그램 게시물, 댓글, 스토리(꾸미기·4분할), 프로필 화면을 실제 UI 그대로 만들어 이미지로 저장하는 도구">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Do+Hyeon&family=Black+Han+Sans&family=Nanum+Pen+Script&family=Nanum+Gothic+Coding:wght@400;700&family=Nanum+Myeongjo:wght@700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">인스타 메이커</div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="post">게시물</button>
+    <button role="tab" data-tab="comments">댓글</button>
+    <button role="tab" data-tab="story">스토리</button>
+    <button role="tab" data-tab="account">내 계정</button>
+  </nav>
+</header>
+
+<main class="work">
+  <section class="preview">
+    <div class="pv-bar">
+      <div class="seg" id="theme-seg">
+        <button data-theme-set="light">라이트</button>
+        <button data-theme-set="dark">다크</button>
+      </div>
+      <button class="primary" id="export-btn">PNG 저장</button>
+    </div>
+    <div class="pv-stage" id="pv-post" data-pane="post"></div>
+    <div class="pv-stage" id="pv-comments" data-pane="comments"></div>
+    <div class="pv-stage" id="pv-story" data-pane="story"></div>
+    <div class="pv-stage" id="pv-account" data-pane="account"></div>
+    <p class="pv-hint" data-pane="story">스티커는 드래그로 이동, 두 손가락(또는 마우스 휠)으로 크기 조절 · Shift+휠로 회전. 사진 칸도 드래그로 위치를 옮길 수 있어요.</p>
+  </section>
+
+  <aside class="panel">
+    <!-- 공통 계정 정보 -->
+    <details class="box" open>
+      <summary>계정 정보 <small>모든 화면에 공통 적용</small></summary>
+      <div class="row">
+        <label class="avatar-up">
+          <img id="profile-avatar-img" alt="">
+          <input type="file" accept="image/*" data-img="profile.avatar">
+          <span>프로필 사진</span>
+        </label>
+        <div class="grow">
+          <label class="f">아이디<input type="text" data-k="profile.username" autocomplete="off" spellcheck="false"></label>
+          <label class="f">이름<input type="text" data-k="profile.name"></label>
+        </div>
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" data-k="profile.verified"> 인증 배지</label>
+        <label><input type="checkbox" data-k="profile.ring"> 스토리 링</label>
+        <label><input type="checkbox" data-k="ui.status"> 상태 표시줄</label>
+      </div>
+      <label class="f">상태 표시줄 시각<input type="text" data-k="ui.clock"></label>
+    </details>
+
+    <!-- 게시물 -->
+    <div data-pane="post">
+      <details class="box" open>
+        <summary>사진</summary>
+        <div class="thumbs" id="post-thumbs"></div>
+        <label class="btn file">사진 추가 (여러 장)<input type="file" accept="image/*" multiple data-imgs="post.photos"></label>
+        <label class="f">비율
+          <select data-k="post.ratio">
+            <option value="4/5">4:5 세로</option>
+            <option value="1/1">1:1 정사각형</option>
+            <option value="3/4">3:4 세로</option>
+            <option value="1.91/1">1.91:1 가로</option>
+          </select>
+        </label>
+      </details>
+      <details class="box" open>
+        <summary>상단</summary>
+        <label class="f">위치 / 오디오 문구<input type="text" data-k="post.location" placeholder="서울 성수동"></label>
+        <label class="f">함께한 계정 (공동 게시물)<input type="text" data-k="post.collab" placeholder="비워두면 표시 안 함"></label>
+        <div class="checks"><label><input type="checkbox" data-k="post.follow"> 팔로우 버튼</label></div>
+      </details>
+      <details class="box" open>
+        <summary>반응</summary>
+        <label class="f">숫자 표시 방식
+          <select data-k="post.countStyle">
+            <option value="inline">아이콘 옆 숫자 (최신)</option>
+            <option value="classic">좋아요 N개 (클래식)</option>
+          </select>
+        </label>
+        <div class="grid2">
+          <label class="f">좋아요<input type="text" data-k="post.likes"></label>
+          <label class="f">댓글<input type="text" data-k="post.commentCount"></label>
+          <label class="f">리포스트<input type="text" data-k="post.reposts"></label>
+          <label class="f">공유<input type="text" data-k="post.shares"></label>
+        </div>
+        <label class="f">좋아한 사람 (○○님 외 여러 명)<input type="text" data-k="post.likedBy" placeholder="비워두면 표시 안 함"></label>
+        <div class="checks">
+          <label><input type="checkbox" data-k="post.liked"> 좋아요 누름</label>
+          <label><input type="checkbox" data-k="post.saved"> 저장함</label>
+          <label><input type="checkbox" data-k="post.showRepost"> 리포스트 아이콘</label>
+        </div>
+      </details>
+      <details class="box" open>
+        <summary>본문</summary>
+        <label class="f">캡션<textarea data-k="post.caption" rows="4"></textarea></label>
+        <div class="checks"><label><input type="checkbox" data-k="post.collapse"> "더 보기"로 접기</label></div>
+        <label class="f">시간<input type="text" data-k="post.time"></label>
+      </details>
+    </div>
+
+    <!-- 댓글 -->
+    <div data-pane="comments">
+      <details class="box" open>
+        <summary>화면</summary>
+        <div class="checks">
+          <label><input type="checkbox" data-k="comments.backdrop"> 게시물 위에 시트로 표시</label>
+        </div>
+        <label class="f">시트 높이
+          <select data-k="comments.height">
+            <option value="half">절반</option>
+            <option value="full">전체</option>
+          </select>
+        </label>
+      </details>
+      <div id="cm-editor"></div>
+      <button class="btn" id="cm-add">+ 댓글 추가</button>
+    </div>
+
+    <!-- 스토리 -->
+    <div data-pane="story">
+      <details class="box" open>
+        <summary>레이아웃</summary>
+        <div class="layouts" id="layouts"></div>
+        <div id="cell-editor"></div>
+        <div class="grid2">
+          <label class="f">칸 간격<input type="range" min="0" max="3" step="0.25" data-k="story.gap"></label>
+          <label class="f">간격 색<input type="color" data-k="story.gapColor"></label>
+        </div>
+      </details>
+      <details class="box" open>
+        <summary>배경</summary>
+        <div class="swatches" id="bg-swatches"></div>
+      </details>
+      <details class="box" open>
+        <summary>꾸미기 (스티커)</summary>
+        <div class="add-stickers">
+          <button data-add="text">Aa 텍스트</button>
+          <button data-add="emoji">😊 이모지</button>
+          <button data-add="mention">@ 멘션</button>
+          <button data-add="location">📍 위치</button>
+          <button data-add="hashtag"># 해시태그</button>
+          <button data-add="link">🔗 링크</button>
+          <button data-add="music">🎵 음악</button>
+          <button data-add="question">❓ 질문</button>
+          <label class="btn-like">🖼 사진<input type="file" accept="image/*" id="add-image"></label>
+        </div>
+        <div id="sticker-editor"></div>
+      </details>
+      <details class="box" open>
+        <summary>스토리 화면 UI</summary>
+        <div class="checks"><label><input type="checkbox" data-k="story.showUI"> 상단·하단 UI 표시 (끄면 업로드용 원본 이미지)</label></div>
+        <div class="grid2">
+          <label class="f">스토리 개수<input type="number" min="1" max="12" data-k="story.count"></label>
+          <label class="f">현재 순서<input type="number" min="1" max="12" data-k="story.current"></label>
+        </div>
+        <label class="f">현재 진행도<input type="range" min="0" max="100" data-k="story.progress"></label>
+        <label class="f">시간<input type="text" data-k="story.time"></label>
+        <label class="f">하단
+          <select data-k="story.bottom">
+            <option value="reply">메시지 보내기 (다른 사람이 볼 때)</option>
+            <option value="own">활동 (내가 볼 때)</option>
+            <option value="none">없음</option>
+          </select>
+        </label>
+      </details>
+    </div>
+
+    <!-- 내 계정 -->
+    <div data-pane="account">
+      <details class="box" open>
+        <summary>프로필</summary>
+        <div class="checks">
+          <label><input type="checkbox" data-k="account.own"> 내 계정으로 보기 (프로필 편집 버튼)</label>
+          <label><input type="checkbox" data-k="account.private"> 비공개 자물쇠</label>
+          <label><input type="checkbox" data-k="account.nav"> 하단 탭 바</label>
+        </div>
+        <div class="grid3">
+          <label class="f">게시물<input type="text" data-k="account.posts"></label>
+          <label class="f">팔로워<input type="text" data-k="account.followers"></label>
+          <label class="f">팔로잉<input type="text" data-k="account.following"></label>
+        </div>
+        <label class="f">카테고리<input type="text" data-k="account.category" placeholder="예: 디지털 크리에이터"></label>
+        <label class="f">소개<textarea data-k="account.bio" rows="3"></textarea></label>
+        <label class="f">링크<input type="text" data-k="account.link"></label>
+        <label class="f">함께 아는 팔로워 문구<input type="text" data-k="account.mutual" placeholder="비워두면 표시 안 함"></label>
+      </details>
+      <details class="box" open>
+        <summary>하이라이트</summary>
+        <div id="hl-editor"></div>
+        <button class="btn" id="hl-add">+ 하이라이트 추가</button>
+      </details>
+      <details class="box" open>
+        <summary>피드 사진</summary>
+        <div class="thumbs" id="grid-thumbs"></div>
+        <label class="btn file">사진 추가 (여러 장)<input type="file" accept="image/*" multiple data-imgs="account.grid"></label>
+        <label class="f">빈 칸 수 (사진이 없을 때)<input type="number" min="0" max="30" data-k="account.placeholders"></label>
+      </details>
+    </div>
+
+    <div class="box foot">
+      <button class="btn ghost" id="reset-btn">이 화면 초기화</button>
+      <p class="muted">입력한 내용은 이 브라우저에만 저장돼요. 인스타그램과는 관련 없는 비공식 목업 도구입니다.</p>
+    </div>
+  </aside>
+</main>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-card">
+    <div class="modal-head"><b>이미지 저장</b><button id="modal-close" aria-label="닫기">✕</button></div>
+    <img id="modal-img" alt="결과 이미지">
+    <p class="muted">모바일에서는 이미지를 길게 눌러 사진에 저장할 수 있어요.</p>
+    <a class="btn primary" id="modal-dl" download="instagram.png">다운로드</a>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="vendor/html-to-image.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
