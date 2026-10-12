@@ -80,9 +80,9 @@ function defaults() {
     comments: {
       backdrop: true, height: 'half',
       items: [
-        { id: uid(), avatar: null, username: 'friend_01', verified: false, time: '2시간', text: '분위기 너무 좋다 😍', likes: '12', liked: true, author: false, pinned: false, authorLiked: true, reply: false, more: 0 },
-        { id: uid(), avatar: null, username: '', verified: false, time: '1시간', text: '@friend_01 고마워 ❤️', likes: '3', liked: false, author: true, pinned: false, authorLiked: false, reply: true, more: 0 },
-        { id: uid(), avatar: null, username: 'hello.world', verified: false, time: '45분', text: '여기 어디야?? 나도 가볼래', likes: '', liked: false, author: false, pinned: false, authorLiked: false, reply: false, more: 2 },
+        { id: uid(), avatar: null, username: 'zzunsiki_1', verified: false, time: '2시간', text: '신드롬을 사랑하자', likes: '12', liked: true, author: false, pinned: false, authorLiked: true, reply: false, more: 0 },
+        { id: uid(), avatar: null, username: '', verified: false, time: '1시간', text: '@zzunsiki_1 고마워 ❤️', likes: '3', liked: false, author: true, pinned: false, authorLiked: false, reply: true, more: 0 },
+        { id: uid(), avatar: null, username: 'zzunsiki_2', verified: false, time: '45분', text: '성유진을 아껴주자', likes: '', liked: false, author: false, pinned: false, authorLiked: false, reply: false, more: 2 },
       ],
     },
     story: {
@@ -716,7 +716,7 @@ document.addEventListener('click', e => {
   if (d.mv) { const arr = getPath(S, d.mv), i = +d.i, j = i + +d.d; if (j >= 0 && j < arr.length) { [arr[i], arr[j]] = [arr[j], arr[i]]; if (d.mv === 'post.photos') S.post.index = j; } renderAll(); save(); return; }
   if (d.cmDel != null) { S.comments.items.splice(+d.cmDel, 1); renderAll(); save(); return; }
   if (d.cmMv != null) { const a = S.comments.items, i = +d.cmMv, j = i + +d.d; if (j >= 0 && j < a.length) [a[i], a[j]] = [a[j], a[i]]; renderAll(); save(); return; }
-  if (t.id === 'cm-add') { S.comments.items.push({ id: uid(), avatar: null, username: 'user_' + (S.comments.items.length + 1), verified: false, time: '방금', text: '댓글 내용', likes: '', liked: false, author: false, pinned: false, authorLiked: false, reply: false, more: 0 }); renderAll(); save(); return; }
+  if (t.id === 'cm-add') { S.comments.items.push({ id: uid(), avatar: null, username: 'zzunsiki_' + (S.comments.items.length + 1), verified: false, time: '방금', text: '댓글 내용', likes: '', liked: false, author: false, pinned: false, authorLiked: false, reply: false, more: 0 }); renderAll(); save(); return; }
   if (t.id === 'hl-add') { S.account.highlights.push({ id: uid(), title: '새 하이라이트', img: null }); renderAll(); save(); return; }
   if (d.hlDel != null) { S.account.highlights.splice(+d.hlDel, 1); renderAll(); save(); return; }
   if (d.layout) { S.story.layout = d.layout; S.story.sel = 0; renderAll(); save(); return; }
