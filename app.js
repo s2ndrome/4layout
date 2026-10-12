@@ -47,7 +47,7 @@ const I = {
   photo: (s = 28) => svg(stroke('M3 7a2 2 0 0 1 2-2h2.5l1.5-2h6l1.5 2H19a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', 1.6), s),
   signal: '<svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".7" fill="currentColor"/><rect x="5" y="5.5" width="3" height="6.5" rx=".7" fill="currentColor"/><rect x="10" y="3" width="3" height="9" rx=".7" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx=".7" fill="currentColor"/></svg>',
   wifi: '<svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.3c2.3 0 4.4.9 6 2.4l1.1-1.1A10 10 0 0 0 8 .7 10 10 0 0 0 .9 3.6L2 4.7a8.4 8.4 0 0 1 6-2.4zm0 3.3c1.4 0 2.6.5 3.6 1.4l1.1-1.1A6.7 6.7 0 0 0 8 4a6.7 6.7 0 0 0-4.7 1.9L4.4 7c1-.9 2.2-1.4 3.6-1.4zM8 9a1.6 1.6 0 0 1 1.2.5L8 11.3 6.8 9.5C7.1 9.2 7.5 9 8 9z" fill="currentColor"/></svg>',
-  battery: '<svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2" fill="currentColor"/><path d="M25 4.5v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2z" fill="currentColor" opacity=".45"/></svg>',
+  battery: (lv = 100) => `<svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="${(Math.max(4, Math.min(100, lv)) / 100 * 20).toFixed(1)}" height="9" rx="2" fill="${lv <= 20 ? '#ff3b30' : 'currentColor'}"/><path d="M25 4.5v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2z" fill="currentColor" opacity=".45"/></svg>`,
 };
 function verified(size = 14) {
   const pts = []; const n = 10;
@@ -69,7 +69,7 @@ function fmt(text) {
 const KEY = 'insta-maker-v1';
 function defaults() {
   return {
-    ui: { tab: 'post', theme: 'light', status: true, clock: '9:41' },
+    ui: { tab: 'post', theme: 'light', status: true, clock: '9:41', sbIcons: true, battery: 100, fontScale: 1 },
     profile: { username: 'your.id', name: '이름', avatar: null, verified: false, ring: false },
     post: {
       photos: [], index: 0, ratio: '4/5', location: '', collab: '', follow: false,
@@ -89,7 +89,7 @@ function defaults() {
       layout: '4', cells: [], sel: 0, gap: 0.5, gapColor: '#ffffff',
       bg: 'linear-gradient(160deg,#833ab4,#fd1d1d 55%,#fcb045)',
       stickers: [], selSticker: null,
-      showUI: true, count: 3, current: 1, progress: 40, time: '3시간', bottom: 'reply',
+      showTop: true, count: 3, current: 1, progress: 40, time: '3시간', bottom: 'reply',
     },
     account: {
       own: true, private: false, nav: true,
@@ -106,6 +106,8 @@ function load() {
   try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { /* 저장소 사용 불가 */ }
   if (!saved) return d;
   for (const k of Object.keys(d)) if (saved[k] && typeof saved[k] === 'object') d[k] = Object.assign(d[k], saved[k]);
+  if (d.story.showUI === false) { d.story.showTop = false; d.story.bottom = 'none'; }
+  delete d.story.showUI;
   return d;
 }
 let saveTimer = null, warnedQuota = false;
@@ -122,9 +124,13 @@ function save() {
 }
 
 /* ───────── 공통 조각 ───────── */
-function statusBar() {
-  return S.ui.status ? `<div class="sb"><span>${esc(S.ui.clock)}</span><span class="sb-r">${I.signal}${I.wifi}${I.battery}</span></div>` : '';
+function sbInner() {
+  return `<span>${esc(S.ui.clock)}</span>${S.ui.sbIcons ? `<span class="sb-r">${I.signal}${I.wifi}${I.battery(S.ui.battery)}</span>` : ''}`;
 }
+function statusBar() {
+  return S.ui.status ? `<div class="sb">${sbInner()}</div>` : '';
+}
+const fsStyle = () => `--fs:${S.ui.fontScale || 1}`;
 function avatarImg(src, cls = 'av', ring = false) {
   const img = `<img class="${cls}" src="${avatarOf(src)}" alt="">`;
   return ring ? `<span class="ring">${img}</span>` : img;
@@ -190,7 +196,7 @@ function postHTML() {
   </article>`;
 }
 function renderPost() {
-  $('#pv-post').innerHTML = `<div class="ig shot" data-theme="${S.ui.theme}">${statusBar()}${postHTML()}</div>`;
+  $('#pv-post').innerHTML = `<div style="${fsStyle()}" class="ig shot" data-theme="${S.ui.theme}">${statusBar()}${postHTML()}</div>`;
 }
 
 /* ───────── 댓글 ───────── */
@@ -226,8 +232,8 @@ function renderComments() {
   </div>`;
   const t = S.ui.theme;
   $('#pv-comments').innerHTML = c.backdrop
-    ? `<div class="ig shot phone" data-theme="${t}"><div class="phone-bg">${statusBar()}${postHTML()}</div><div class="dim"></div><div class="sheet-wrap ${c.height}">${sheet}</div></div>`
-    : `<div class="ig shot cm-plain" data-theme="${t}">${sheet}</div>`;
+    ? `<div style="${fsStyle()}" class="ig shot phone" data-theme="${t}"><div class="phone-bg">${statusBar()}${postHTML()}</div><div class="dim"></div><div class="sheet-wrap ${c.height}">${sheet}</div></div>`
+    : `<div style="${fsStyle()}" class="ig shot cm-plain" data-theme="${t}">${sheet}</div>`;
 }
 
 /* ───────── 프로필 ───────── */
@@ -242,7 +248,7 @@ function renderAccount() {
     : '<div class="blue">팔로우</div><div>메시지</div>';
   const nav = a.nav ? `<div class="a-nav">${I.home()}${I.reels(26)}${I.share(26)}${I.search()}${avatarImg(pr.avatar)}</div>` : '';
   $('#pv-account').innerHTML = `
-  <div class="ig shot acct${a.nav ? ' phone' : ''}" data-theme="${S.ui.theme}">
+  <div style="${fsStyle()}" class="ig shot acct${a.nav ? ' phone' : ''}" data-theme="${S.ui.theme}">
     ${statusBar()}
     <div class="a-top">
       <div class="a-un">${a.private ? I.lock(18) : ''}<span class="t">${esc(pr.username)}</span>${own ? I.chev() : ''}${pr.verified ? verified(18) : ''}</div>
@@ -341,7 +347,7 @@ function renderStory() {
   const stickers = s.stickers.map(k => `<div class="k${k.id === s.selSticker ? ' sel' : ''}" data-k-id="${k.id}" style="left:${k.x}%;top:${k.y}%;transform:${stickerTransform(k)}">${stickerInner(k)}</div>`).join('');
 
   let ui = '';
-  if (s.showUI) {
+  {
     const n = clamp(+s.count || 1, 1, 12), cur = clamp(+s.current || 1, 1, n);
     const bars = Array.from({ length: n }, (_, i) => `<i><b style="width:${i + 1 < cur ? 100 : i + 1 === cur ? s.progress : 0}%"></b></i>`).join('');
     const top = S.ui.status ? 13.5 : 2.4;
@@ -349,15 +355,15 @@ function renderStory() {
     if (s.bottom === 'reply') bottom = `<div class="s-shade-b"></div><div class="s-bottom"><div class="s-input">메시지 보내기</div>${I.heart(false)}${I.share()}</div>`;
     else if (s.bottom === 'own') bottom = `<div class="s-shade-b"></div><div class="s-own"><div class="s-viewers">${avatarImg(null)}${avatarImg(null)}${avatarImg(null)}</div><span class="lbl">활동</span><span class="sp"></span><span class="s-oi">${I.heartHL()}<span>하이라이트</span></span><span class="s-oi">${I.share()}<span>보내기</span></span><span class="s-oi">${I.more()}<span>더 보기</span></span></div>`;
     ui = `<div class="s-ui">
-      <div class="s-shade-t"></div>
-      ${S.ui.status ? `<div class="s-sb"><span>${esc(S.ui.clock)}</span><span class="sb-r">${I.signal}${I.wifi}${I.battery}</span></div>` : ''}
-      <div class="s-bars" style="top:${top}cqw">${bars}</div>
-      <div class="s-head" style="top:${top + 2.6}cqw">${avatarImg(pr.avatar)}<b>${esc(pr.username)}</b>${pr.verified ? verified(13) : ''}<span class="tm">${esc(s.time)}</span><span class="sp"></span>${I.more()}${I.close()}</div>
+      ${S.ui.status || s.showTop ? '<div class="s-shade-t"></div>' : ''}
+      ${S.ui.status ? `<div class="s-sb">${sbInner()}</div>` : ''}
+      ${s.showTop ? `<div class="s-bars" style="top:${top}cqw">${bars}</div>
+      <div class="s-head" style="top:${top + 2.6}cqw">${avatarImg(pr.avatar)}<b>${esc(pr.username)}</b>${pr.verified ? verified(13) : ''}<span class="tm">${esc(s.time)}</span><span class="sp"></span>${I.more()}${I.close()}</div>` : ''}
       ${bottom}
     </div>`;
   }
   const stage = $('#pv-story');
-  stage.innerHTML = `<div class="story shot" id="story" style="background:${s.bg}">${grid}${stickers}${ui}</div>`;
+  stage.innerHTML = `<div class="story shot" id="story" style="background:${s.bg};${fsStyle()}">${grid}${stickers}${ui}</div>`;
   layoutCells();
 }
 function fitCellImg(cellEl, c) {
@@ -613,6 +619,7 @@ function renderStickerEditor(slidersOnly) {
 
 /* ───────── 폼 바인딩 ───────── */
 function syncForm(root = document) {
+  $$('[data-out]', root).forEach(el => { const v = getPath(S, el.dataset.out); el.textContent = el.hasAttribute('data-pct') ? Math.round(v * 100) : v; });
   $$('[data-k]', root).forEach(el => {
     const v = getPath(S, el.dataset.k);
     if (el.type === 'checkbox') el.checked = !!v;
@@ -630,6 +637,7 @@ document.addEventListener('input', e => {
     const kk = getPath(S, k.replace(/\.(scale|rot)$/, '')), node = $(`#story [data-k-id="${kk.id}"]`);
     if (node) { node.style.transform = stickerTransform(kk); save(); return; }
   }
+  if (k.startsWith('ui.')) { syncForm(); renderPreview(); save(); return; }
   renderPreview();
   save();
 });
@@ -733,6 +741,7 @@ document.addEventListener('click', e => {
     renderAll(); save(); return;
   }
   if (t.id === 'export-btn') { exportCurrent(); return; }
+  if (t.id === 'clock-now') { const d = new Date(); S.ui.clock = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; syncForm(); renderPreview(); save(); return; }
   if (t.id === 'reset-btn') {
     if (!confirm('현재 화면의 내용을 처음 상태로 되돌릴까요?')) return;
     const tab = S.ui.tab; S[tab] = defaults()[tab]; renderAll(); save(); return;
