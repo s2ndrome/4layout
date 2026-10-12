@@ -92,7 +92,7 @@ function defaults() {
       showTop: true, count: 3, current: 1, progress: 40, time: '3시간', bottom: 'reply',
     },
     account: {
-      own: true, private: false, nav: true,
+      own: true, private: false, nav: true, showHL: true,
       posts: '24', followers: '1,234', following: '321', category: '', bio: '좋아하는 것들을 기록해요 ✨', link: '', mutual: '',
       highlights: [{ id: uid(), title: '일상', img: null }, { id: uid(), title: '여행', img: null }],
       grid: [], placeholders: 9,
@@ -273,7 +273,7 @@ function renderAccount() {
       ${a.mutual ? `<div class="a-mutual">${avatarImg(null, 'av" style="width:20px;height:20px')}<span>${esc(a.mutual)}</span></div>` : ''}
     </div>
     <div class="a-btns">${btns}<div class="ico">${I.addUser()}</div></div>
-    <div class="a-hl">${hls}</div>
+    ${a.showHL ? `<div class="a-hl">${hls}</div>` : ''}
     <div class="a-tabs"><div class="on">${I.grid()}</div><div>${I.reels()}</div><div>${I.tagged()}</div></div>
     <div class="a-grid">${cells}</div>
     ${nav}
@@ -780,6 +780,7 @@ function renderAll() {
   $$('[data-theme-set]').forEach(b => b.classList.toggle('on', b.dataset.themeSet === S.ui.theme));
   $('#theme-seg').style.visibility = t === 'story' ? 'hidden' : '';
   $$('[data-pane]').forEach(el => { el.hidden = el.dataset.pane !== t; });
+  $('#hero-t').textContent = { post: 'Post', comments: 'Comments', story: 'Story', account: 'Profile' }[t];
   if (t === 'post') renderPostEditor();
   if (t === 'comments') renderCommentEditor();
   if (t === 'story') { renderLayouts(); renderCellEditor(); renderStickerEditor(); }
