@@ -590,7 +590,7 @@ function listBarHTML(kind) {
   const arr = kind === 'post' ? S.posts : S.stories, cur = kind === 'post' ? S.ui.postIdx : S.ui.storyIdx;
   const name = kind === 'post' ? '게시물' : '스토리';
   return `<div class="chips">${arr.map((_, i) => `<button data-pick-${kind}="${i}" class="${i === cur ? 'on' : ''}">${name} ${i + 1}</button>`).join('')}<button data-new-${kind}>+ 새 ${name}</button></div>
-    <div class="btn-row"><button class="btn" data-dup-${kind}>${name} ${cur + 1} 복제</button>${arr.length > 1 ? `<button class="btn danger" data-del-${kind}>${name} ${cur + 1} 삭제</button>` : ''}</div>`;
+    <div class="btn-row">${arr.length > 1 ? `<button class="btn" data-mv-${kind}="-1"${cur === 0 ? ' disabled' : ''}>◀ 앞으로</button><button class="btn" data-mv-${kind}="1"${cur === arr.length - 1 ? ' disabled' : ''}>뒤로 ▶</button>` : ''}<button class="btn" data-dup-${kind}>${name} ${cur + 1} 복제</button>${arr.length > 1 ? `<button class="btn danger" data-del-${kind}>${name} ${cur + 1} 삭제</button>` : ''}</div>`;
 }
 function renderLists() {
   $('#post-list').innerHTML = listBarHTML('post');
@@ -914,6 +914,14 @@ document.addEventListener('click', e => {
   if (d.tab) { S.ui.tab = d.tab; renderAll(); save(); return; }
   if (d.pickPost != null) { S.ui.postIdx = +d.pickPost; renderAll(); save(); return; }
   if (d.pickStory != null) { S.ui.storyIdx = +d.pickStory; renderAll(); save(); return; }
+  if (d.mvPost != null || d.mvStory != null) {
+    const isPost = d.mvPost != null, arr = isPost ? S.posts : S.stories, key = isPost ? 'postIdx' : 'storyIdx';
+    const i = S.ui[key], j = i + +(isPost ? d.mvPost : d.mvStory);
+    if (j < 0 || j >= arr.length) return;
+    [arr[i], arr[j]] = [arr[j], arr[i]]; S.ui[key] = j;
+    if (!isPost) S.account.highlights.forEach(h => { if (h.story === i) h.story = j; else if (h.story === j) h.story = i; });
+    renderAll(); save(); return;
+  }
   if (d.newPost != null) { S.posts.push(newPost()); S.ui.postIdx = S.posts.length - 1; renderAll(); save(); return; }
   if (d.newStory != null) { S.stories.push(newStory()); S.ui.storyIdx = S.stories.length - 1; renderAll(); save(); return; }
   if (d.dupPost != null) { S.posts.splice(S.ui.postIdx + 1, 0, clone(S.post)); S.ui.postIdx++; renderAll(); save(); toast('게시물을 복제했어요.'); return; }
