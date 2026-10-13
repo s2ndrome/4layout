@@ -51,11 +51,14 @@
     <details class="box" open>
       <summary>계정 정보 <small>모든 화면에 공통 적용</small></summary>
       <div class="row">
-        <label class="avatar-up">
-          <img id="profile-avatar-img" alt="">
-          <input type="file" accept="image/*" data-img="profile.avatar">
-          <span>프로필 사진</span>
-        </label>
+        <div class="avatar-col">
+          <label class="avatar-up">
+            <img id="profile-avatar-img" alt="">
+            <input type="file" accept="image/*" data-img="profile.avatar">
+            <span>프로필 사진</span>
+          </label>
+          <button class="link-mini" data-link="img:profile.avatar">링크로 넣기</button>
+        </div>
         <div class="grow">
           <label class="f">아이디<input type="text" data-k="profile.username" autocomplete="off" spellcheck="false"></label>
           <label class="f">이름<input type="text" data-k="profile.name"></label>
@@ -91,7 +94,7 @@
       <details class="box" open>
         <summary>사진</summary>
         <div class="thumbs" id="post-thumbs"></div>
-        <label class="btn file">사진 추가 (여러 장)<input type="file" accept="image/*" multiple data-imgs="post.photos"></label>
+        <div class="btn-row"><label class="btn file">사진 추가 (여러 장)<input type="file" accept="image/*" multiple data-imgs="post.photos"></label><button class="btn" data-link="imgs:post.photos">링크로 추가</button></div>
         <div id="crop-editor"></div>
         <label class="f">비율
           <select data-k="post.ratio">
@@ -190,6 +193,7 @@
           <button data-add="music">🎵 음악</button>
           <button data-add="question">❓ 질문</button>
           <label class="btn-like">🖼 사진<input type="file" accept="image/*" id="add-image"></label>
+          <button data-link="sticker">🔗 사진 링크</button>
         </div>
         <div id="sticker-editor"></div>
       </details>
@@ -245,7 +249,7 @@
         <summary>피드 사진</summary>
         <p class="muted">게시물 탭에서 만든 게시물이 피드 맨 앞에 나오고, 누르면 그 게시물로 가요. 여기서 넣는 사진은 그 뒤에 이어 붙는 사진이에요.</p>
         <div class="thumbs" id="grid-thumbs"></div>
-        <label class="btn file">사진 추가 (여러 장)<input type="file" accept="image/*" multiple data-imgs="account.grid"></label>
+        <div class="btn-row"><label class="btn file">사진 추가 (여러 장)<input type="file" accept="image/*" multiple data-imgs="account.grid"></label><button class="btn" data-link="imgs:account.grid">링크로 추가</button></div>
         <label class="f">빈 칸 수 (사진이 없을 때)<input type="number" min="0" max="30" data-k="account.placeholders"></label>
       </details>
     </div>
@@ -274,6 +278,15 @@
       <button class="primary" id="slot-save">지금 상태 저장</button>
     </div>
     <div class="slot-list" id="slot-list"></div>
+  </div>
+</div>
+<div class="modal" id="link-modal" hidden>
+  <div class="modal-card">
+    <div class="modal-head"><b id="link-title">링크로 사진 넣기</b><button data-close-modal aria-label="닫기">✕</button></div>
+    <label class="f">이미지 주소<textarea id="link-url" rows="2" spellcheck="false" autocomplete="off"></textarea></label>
+    <p class="muted">사진을 길게 누르거나 오른쪽 클릭해서 "이미지 주소 복사"한 링크를 붙여 넣어 주세요. 구글 드라이브·드롭박스 공유 링크도 돼요(전체 공개일 때). 사진이 파일 안에 들어가지 않아서 임시저장과 HTML 파일이 훨씬 가벼워져요.</p>
+    <p class="link-err" id="link-err" hidden></p>
+    <div class="btn-row"><button class="primary" id="link-ok">넣기</button></div>
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>

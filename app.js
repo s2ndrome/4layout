@@ -703,7 +703,7 @@ function renderCommentEditor() {
   $('#cm-editor').innerHTML = items.map((m, i) => `
   <div class="item">
     <div class="item-head">
-      ${m.author ? `<img src="${avatarOf(S.profile.avatar)}" alt="" title="작성자는 계정 정보의 사진을 사용해요">` : `<label title="프로필 사진 변경"><img src="${avatarOf(m.avatar)}" alt=""><input type="file" accept="image/*" data-img="comments.items.${i}.avatar"></label>`}
+      ${m.author ? `<img src="${avatarOf(S.profile.avatar)}" alt="" title="작성자는 계정 정보의 사진을 사용해요">` : `<label title="프로필 사진 변경"><img src="${avatarOf(m.avatar)}" alt=""><input type="file" accept="image/*" data-img="comments.items.${i}.avatar"></label><button data-link="img:comments.items.${i}.avatar" title="링크로 프로필 사진 넣기" aria-label="링크로 프로필 사진 넣기">🔗</button>`}
       <div class="grow">${esc(m.author ? S.profile.username + ' (작성자)' : m.username || '댓글 ' + (i + 1))}</div>
       <button data-cm-mv="${i}" data-d="-1" aria-label="위로">↑</button>
       <button data-cm-mv="${i}" data-d="1" aria-label="아래로">↓</button>
@@ -727,7 +727,7 @@ function renderCommentEditor() {
 function renderHlEditor() {
   $('#hl-editor').innerHTML = S.account.highlights.map((h, i) => `
   <div class="item"><div class="item-head">
-    <label title="커버 사진"><img src="${h.img || storyCover(h.story) || DEFAULT_AVATAR}" alt=""><input type="file" accept="image/*" data-img="account.highlights.${i}.img"></label>
+    <label title="커버 사진"><img src="${h.img || storyCover(h.story) || DEFAULT_AVATAR}" alt=""><input type="file" accept="image/*" data-img="account.highlights.${i}.img"></label><button data-link="img:account.highlights.${i}.img" title="링크로 커버 넣기" aria-label="링크로 커버 넣기">🔗</button>
     <div class="grow"><label class="f" style="margin:0"><input type="text" data-k="account.highlights.${i}.title"></label></div>
     <button data-hl-del="${i}" aria-label="삭제">✕</button>
   </div>
@@ -747,6 +747,7 @@ function renderCellEditor(slidersOnly) {
     <div class="cells">${cells.map((x, i) => `<button data-sel-cell="${i}" class="${i === s.sel ? 'on' : ''}" style="${x.src ? `background-image:url('${x.src}')` : ''}">${x.src ? '' : i + 1}</button>`).join('')}</div>
     <div class="btn-row">
       <button class="btn" data-pick-cell>${c.src ? '사진 바꾸기' : '사진 넣기'} (${s.sel + 1}번 칸)</button>
+      <button class="btn" data-link="cell">링크로 넣기</button>
       ${c.src ? '<button class="btn danger" data-clear-cell>비우기</button>' : ''}
     </div>
     ${c.src ? `<label class="f">확대<input type="range" id="cell-zoom" min="1" max="5" step="0.01" value="${c.z}"></label>` : ''}`;
@@ -794,7 +795,7 @@ function renderStickerEditor(slidersOnly) {
       break;
     case 'music':
       fields = `<label class="f">제목<input type="text" data-k="${p}.title"></label><label class="f">아티스트<input type="text" data-k="${p}.artist"></label>
-        <label class="btn file">앨범 커버<input type="file" accept="image/*" data-img="${p}.img"></label>
+        <div class="btn-row"><label class="btn file">앨범 커버<input type="file" accept="image/*" data-img="${p}.img"></label><button class="btn" data-link="img:${p}.img">링크로 넣기</button></div>
         <h4>스타일</h4>${chips('style', { '': '밝게', dark: '어둡게' })}`;
       break;
     case 'question':
@@ -969,6 +970,8 @@ document.addEventListener('click', e => {
     renderAll(); save(); return;
   }
   if (d.cropReset) { const c = cropTarget(d.cropReset); if (c) { Object.assign(c, CROP0()); renderAll(); save(); } return; }
+  if (d.link) { openLink(d.link); return; }
+  if (t.id === 'link-ok') { applyLink(); return; }
   if (t.id === 'export-btn') { exportCurrent(); return; }
   if (t.id === 'html-one') { exportHTML(false); return; }
   if (t.id === 'html-all') { exportHTML(true); return; }
@@ -1089,6 +1092,7 @@ async function exportCurrent() {
     const opts = { pixelRatio: ratio, fontEmbedCSS, cacheBust: false, backgroundColor: S.ui.tab === 'story' ? '#000' : undefined };
     if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) await htmlToImage.toPng(node, opts); // 사파리 첫 렌더 이미지 누락 방지
     const url = await htmlToImage.toPng(node, opts);
+    if ([...node.querySelectorAll('img')].some(im => /^https?:/.test(im.getAttribute('src') || ''))) setTimeout(() => toast('링크로 넣은 사진은 사이트에 따라 PNG에 안 나올 수 있어요. 안 나오면 그 사진만 파일로 올려 주세요.'), 400);
     const name = `instagram-${S.ui.tab}-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '')}.png`;
     $('#modal-img').src = url;
     const dl = $('#modal-dl'); dl.href = url; dl.download = name;
@@ -1106,6 +1110,64 @@ let toastTimer;
 function toast(msg) {
   const t = $('#toast'); t.textContent = msg; t.hidden = false;
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3200);
+}
+
+/* ───────── 링크로 사진 넣기 ───────── */
+let linkTarget = null;
+// 공유 링크를 이미지 주소로 바꾼다 (구글 드라이브, 드롭박스)
+function normalizeImageURL(u) {
+  u = u.trim();
+  let m = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{10,})/);
+  if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w2000`;
+  if (/dropbox\.com\//.test(u)) { try { const x = new URL(u); x.searchParams.delete('dl'); x.searchParams.set('raw', '1'); return x.toString(); } catch { return u; } }
+  return u;
+}
+function probeImage(url) {
+  return new Promise(res => {
+    const img = new Image(); let done = false;
+    const end = ok => { if (!done) { done = true; res(ok); } };
+    img.onload = () => end(img.naturalWidth > 0);
+    img.onerror = () => end(false);
+    setTimeout(() => end(false), 12000);
+    img.src = url;
+  });
+}
+function openLink(target) {
+  linkTarget = target;
+  const multi = target.startsWith('imgs:');
+  $('#link-title').textContent = multi ? '링크로 사진 추가 (여러 장)' : '링크로 사진 넣기';
+  $('#link-url').placeholder = multi ? 'https://...\nhttps://...  (한 줄에 하나씩)' : 'https://...';
+  $('#link-url').rows = multi ? 4 : 2;
+  $('#link-url').value = '';
+  $('#link-err').hidden = true;
+  $('#link-modal').hidden = false;
+  setTimeout(() => $('#link-url').focus(), 50);
+}
+async function applyLink() {
+  const btn = $('#link-ok'), err = $('#link-err');
+  const multi = linkTarget.startsWith('imgs:');
+  let urls = $('#link-url').value.split(/\s+/).filter(Boolean).map(normalizeImageURL);
+  if (!multi) urls = urls.slice(0, 1);
+  const bad = urls.filter(u => !/^https?:\/\//i.test(u));
+  if (!urls.length || bad.length) { err.textContent = 'https:// 로 시작하는 이미지 주소를 넣어 주세요.'; err.hidden = false; return; }
+  btn.disabled = true; const label = btn.textContent; btn.textContent = '확인 중…'; err.hidden = true;
+  const ok = await Promise.all(urls.map(probeImage));
+  btn.disabled = false; btn.textContent = label;
+  const failed = urls.filter((_, i) => !ok[i]);
+  if (failed.length) {
+    err.textContent = `사진을 불러오지 못한 링크가 있어요${urls.length > 1 ? ` (${failed.length}개)` : ''}. 웹페이지 주소가 아니라 사진을 길게 누르거나 오른쪽 클릭해서 "이미지 주소 복사"한 링크인지, 공개된 사진인지 확인해 주세요.`;
+    err.hidden = false; return;
+  }
+  const [kind, path] = linkTarget.split(/:(.*)/s);
+  if (kind === 'img') setPath(S, path, urls[0]);
+  else if (kind === 'imgs') {
+    const arr = getPath(S, path); arr.push(...urls);
+    if (path === 'post.photos') { S.post.index = arr.length - urls.length; ensureCrops(S.post); }
+  } else if (kind === 'cell') Object.assign(cellsArr()[S.story.sel], { src: urls[0], fx: .5, fy: .5, z: 1 });
+  else if (kind === 'sticker') { const k = newSticker('image', { img: urls[0] }); S.story.stickers.push(k); S.story.selSticker = k.id; }
+  $('#link-modal').hidden = true;
+  renderAll(); save();
+  toast(urls.length > 1 ? `사진 ${urls.length}장을 링크로 넣었어요.` : '링크로 사진을 넣었어요.');
 }
 
 /* ───────── HTML 파일로 저장 ───────── */
@@ -1286,8 +1348,10 @@ function makeThumb(src) {
     img.onload = () => {
       const cv = document.createElement('canvas'); cv.width = cv.height = 96;
       const sc = Math.max(96 / img.width, 96 / img.height), w = img.width * sc, h = img.height * sc;
-      cv.getContext('2d').drawImage(img, (96 - w) / 2, (96 - h) / 2, w, h);
-      res(cv.toDataURL('image/jpeg', .8));
+      try {
+        cv.getContext('2d').drawImage(img, (96 - w) / 2, (96 - h) / 2, w, h);
+        res(cv.toDataURL('image/jpeg', .8));
+      } catch { res(/^https?:/.test(src) ? src : null); } // 다른 사이트 사진은 주소 그대로
     };
     img.onerror = () => res(null);
     img.src = src;
