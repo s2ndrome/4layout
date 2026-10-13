@@ -86,6 +86,7 @@ function newPost() {
     liked: false, saved: false, showRepost: true,
     caption: '오늘의 기록 📷\n#일상 #daily', collapse: false, time: '3시간 전',
     comments: newComments(),
+    crops: [], thumb: null,
   };
 }
 function newStory() {
@@ -183,6 +184,20 @@ function save() {
   }, 300);
 }
 
+/* ───────── 사진 위치·확대 (게시물 사진, 프로필 썸네일) ───────── */
+const CROP0 = () => ({ fx: .5, fy: .5, z: 1 });
+function cropCSS(c) {
+  c = c || CROP0();
+  const pos = `${(c.fx * 100).toFixed(2)}% ${(c.fy * 100).toFixed(2)}%`;
+  return `object-position:${pos};transform-origin:${pos};transform:scale(${(+c.z || 1).toFixed(3)})`;
+}
+function ensureCrops(p) {
+  if (!Array.isArray(p.crops)) p.crops = [];
+  while (p.crops.length < p.photos.length) p.crops.push(CROP0());
+  p.crops.length = p.photos.length;
+  return p.crops;
+}
+
 /* ───────── 공통 조각 ───────── */
 function sbInner() {
   return `<span>${esc(S.ui.clock)}</span>${S.ui.sbIcons ? `<span class="sb-r">${I.signal}${I.wifi}${I.battery(S.ui.battery)}</span>` : ''}`;
@@ -232,9 +247,9 @@ function postHTML(p = S.post, o = {}) {
       ${p.follow ? '<span class="follow-btn">팔로우</span>' : ''}
       ${I.more()}
     </header>
-    <div class="p-media" style="aspect-ratio:${rw}/${rh}"${o.viewer && photos.length > 1 ? ' data-car' : ''}>
-      ${o.viewer && photos.length > 1 ? photos.map((src, i) => `<img src="${src}" alt="" data-ph="${i}"${i === idx ? '' : ' hidden'}>`).join('')
-        : cur ? `<img src="${cur}" alt="">` : o.viewer ? '' : `<div class="ph-empty">${I.photo()}<span>사진을 추가하세요</span></div>`}
+    <div class="p-media" style="aspect-ratio:${rw}/${rh}"${o.viewer && photos.length > 1 ? ' data-car' : ''}${o.crop && cur ? ' data-crop="post"' : ''}>
+      ${o.viewer && photos.length > 1 ? photos.map((src, i) => `<img src="${src}" alt="" data-ph="${i}" style="${cropCSS((p.crops || [])[i])}"${i === idx ? '' : ' hidden'}>`).join('')
+        : cur ? `<img src="${cur}" alt="" style="${cropCSS((p.crops || [])[idx])}">` : o.viewer ? '' : `<div class="ph-empty">${I.photo()}<span>사진을 추가하세요</span></div>`}
       ${photos.length > 1 ? `<span class="p-count">${idx + 1}/${photos.length}</span>` : ''}
     </div>
     ${inline ? dots : ''}
@@ -258,7 +273,7 @@ function postHTML(p = S.post, o = {}) {
   </article>`;
 }
 function renderPost() {
-  $('#pv-post').innerHTML = `<div style="${fsStyle()}" class="ig shot" data-theme="${S.ui.theme}">${statusBar()}${postHTML()}</div>`;
+  $('#pv-post').innerHTML = `<div style="${fsStyle()}" class="ig shot" data-theme="${S.ui.theme}">${statusBar()}${postHTML(S.post, { crop: true })}</div>`;
 }
 
 /* ───────── 댓글 ───────── */
@@ -314,7 +329,7 @@ function accountHTML(o = {}) {
     return `<div class="hl"${link}><div class="hl-c">${cover ? `<img src="${cover}" alt="">` : '<div></div>'}</div><span>${esc(h.title)}</span></div>`;
   }).join('')
     + (own ? `<div class="hl"><div class="hl-c"><div class="hl-new">${I.plus(26)}</div></div><span>신규</span></div>` : '');
-  let cells = S.posts.map((p, i) => `<div ${o.viewer ? `data-go="s-post-${i}"` : `data-go-post="${i}"`}>${p.photos[0] ? `<img src="${p.photos[0]}" alt="">` : ''}${p.photos.length > 1 ? `<span class="g-multi">${I.multi}</span>` : ''}</div>`)
+  let cells = S.posts.map((p, i) => `<div ${o.viewer ? `data-go="s-post-${i}"` : `data-go-post="${i}"`}>${p.photos[0] ? `<img src="${p.photos[0]}" alt="" style="${cropCSS(p.thumb)}">` : ''}${p.photos.length > 1 ? `<span class="g-multi">${I.multi}</span>` : ''}</div>`)
     .concat(a.grid.map(src => `<div><img src="${src}" alt=""></div>`));
   if (!S.posts.some(p => p.photos.length) && !a.grid.length) while (cells.length < a.placeholders) cells.push('<div></div>');
   cells = cells.join('');
@@ -584,7 +599,102 @@ function renderLists() {
 }
 function renderPostEditor() {
   $('#post-thumbs').innerHTML = thumbsHTML(S.post.photos, 'post.photos', S.post.index);
+  renderCropEditor();
 }
+function renderCropEditor(slidersOnly) {
+  const p = S.post, box = $('#crop-editor');
+  if (!p.photos.length) { box.innerHTML = ''; return; }
+  const i = clamp(p.index, 0, p.photos.length - 1), c = ensureCrops(p)[i], t = p.thumb || CROP0();
+  if (slidersOnly) {
+    const a = $('#crop-zoom'), b = $('#thumb-zoom'), im = $('#thumb-crop img');
+    if (a) a.value = c.z; if (b) b.value = t.z; if (im) im.style.cssText = cropCSS(t);
+    return;
+  }
+  box.innerHTML = `
+    <p class="muted">미리보기 사진을 드래그하면 위치가 옮겨지고, 두 손가락(또는 마우스 휠)으로 확대돼요.</p>
+    <label class="f">사진 ${i + 1} 확대<input type="range" id="crop-zoom" min="1" max="5" step="0.01" value="${c.z}"></label>
+    <div class="btn-row"><button class="btn" data-crop-reset="post">사진 ${i + 1} 위치 초기화</button></div>
+    <h4 class="sub-h">프로필 피드 썸네일 (1:1)</h4>
+    <div class="crop-row">
+      <div class="thumb-crop" id="thumb-crop" data-crop="thumb"><img src="${p.photos[0]}" alt="" style="${cropCSS(t)}"></div>
+      <div class="grow">
+        <label class="f">썸네일 확대<input type="range" id="thumb-zoom" min="1" max="5" step="0.01" value="${t.z}"></label>
+        <div class="btn-row"><button class="btn" data-crop-reset="thumb">썸네일 초기화</button></div>
+      </div>
+    </div>`;
+}
+function cropTarget(kind) {
+  const p = S.post;
+  if (!p.photos.length) return null;
+  if (kind === 'thumb') return p.thumb || (p.thumb = CROP0());
+  return ensureCrops(p)[clamp(p.index, 0, p.photos.length - 1)];
+}
+function applyCrop(img, c) { if (img) img.style.cssText = cropCSS(c); }
+function cropImgsFor(kind) {
+  return kind === 'thumb' ? [$('#thumb-crop img')] : [$('#pv-post .p-media img')];
+}
+// 드래그로 위치 이동, 두 손가락·휠로 확대
+const cropG = { ptrs: new Map(), g: null };
+function cropAnchor(g, x, y) { g.sx = x; g.sy = y; g.fx0 = g.c.fx; g.fy0 = g.c.fy; }
+function onCropDown(e) {
+  const el = e.target.closest('[data-crop]'); if (!el) return;
+  const c = cropTarget(el.dataset.crop); if (!c) return;
+  e.preventDefault();
+  el.setPointerCapture(e.pointerId);
+  cropG.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (cropG.ptrs.size === 1) { cropG.g = { el, kind: el.dataset.crop, img: el.querySelector('img'), c }; cropAnchor(cropG.g, e.clientX, e.clientY); }
+  else if (cropG.g) { const [a, b] = [...cropG.ptrs.values()]; cropG.g.pinch = { d: Math.hypot(b.x - a.x, b.y - a.y) || 1, z0: cropG.g.c.z }; }
+}
+function onCropMove(e) {
+  const g = cropG.g; if (!g || !cropG.ptrs.has(e.pointerId)) return;
+  cropG.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const c = g.c;
+  if (cropG.ptrs.size >= 2 && g.pinch) {
+    const [a, b] = [...cropG.ptrs.values()];
+    c.z = clamp(g.pinch.z0 * Math.hypot(b.x - a.x, b.y - a.y) / g.pinch.d, 1, 5);
+  } else if (g.img && g.img.naturalWidth) {
+    const r = g.el.getBoundingClientRect(), w = g.img.naturalWidth, h = g.img.naturalHeight;
+    const base = Math.max(r.width / w, r.height / h);
+    const rx = w * base * c.z - r.width, ry = h * base * c.z - r.height;
+    if (rx > .5) c.fx = clamp(g.fx0 - (e.clientX - g.sx) / rx, 0, 1);
+    if (ry > .5) c.fy = clamp(g.fy0 - (e.clientY - g.sy) / ry, 0, 1);
+  }
+  applyCrop(g.img, c);
+}
+function onCropUp(e) {
+  cropG.ptrs.delete(e.pointerId);
+  const g = cropG.g; if (!g) return;
+  if (cropG.ptrs.size === 1) { const [p] = [...cropG.ptrs.values()]; g.pinch = null; cropAnchor(g, p.x, p.y); return; }
+  if (cropG.ptrs.size) return;
+  cropG.g = null;
+  renderCropEditor(true);
+  save();
+}
+function onCropWheel(e) {
+  const el = e.target.closest('[data-crop]'); if (!el) return;
+  const c = cropTarget(el.dataset.crop); if (!c) return;
+  e.preventDefault();
+  c.z = clamp(c.z * Math.exp(-e.deltaY * .0015), 1, 5);
+  applyCrop(el.querySelector('img'), c);
+  renderCropEditor(true);
+  save();
+}
+for (const root of ['#pv-post', '#crop-editor']) {
+  const el = $(root);
+  el.addEventListener('pointerdown', onCropDown);
+  el.addEventListener('pointermove', onCropMove);
+  el.addEventListener('pointerup', onCropUp);
+  el.addEventListener('pointercancel', onCropUp);
+  el.addEventListener('wheel', onCropWheel, { passive: false });
+}
+document.addEventListener('input', e => {
+  const id = e.target.id;
+  if (id !== 'crop-zoom' && id !== 'thumb-zoom') return;
+  const kind = id === 'crop-zoom' ? 'post' : 'thumb', c = cropTarget(kind); if (!c) return;
+  c.z = +e.target.value;
+  cropImgsFor(kind).forEach(im => applyCrop(im, c));
+  save();
+});
 function renderGridEditor() {
   $('#grid-thumbs').innerHTML = thumbsHTML(S.account.grid, 'account.grid', -1);
 }
@@ -773,7 +883,7 @@ document.addEventListener('change', async e => {
     } else if (el.dataset.imgs) {
       const arr = getPath(S, el.dataset.imgs);
       for (const f of el.files) arr.push(await readImage(f));
-      if (el.dataset.imgs === 'post.photos') S.post.index = S.post.photos.length - el.files.length;
+      if (el.dataset.imgs === 'post.photos') { S.post.index = S.post.photos.length - el.files.length; ensureCrops(S.post); }
     } else if (el.id === 'add-image') {
       const k = newSticker('image', { img: await readImage(el.files[0], 1200) });
       S.story.stickers.push(k); S.story.selSticker = k.id;
@@ -822,8 +932,8 @@ document.addEventListener('click', e => {
   if (d.closeModal != null) { t.closest('.modal').hidden = true; return; }
   if (d.themeSet) { S.ui.theme = d.themeSet; renderAll(); save(); return; }
   if (d.thumb === 'post.photos') { S.post.index = +d.i; renderAll(); save(); return; }
-  if (d.del) { const arr = getPath(S, d.del); arr.splice(+d.i, 1); if (d.del === 'post.photos') S.post.index = clamp(S.post.index, 0, Math.max(0, arr.length - 1)); renderAll(); save(); return; }
-  if (d.mv) { const arr = getPath(S, d.mv), i = +d.i, j = i + +d.d; if (j >= 0 && j < arr.length) { [arr[i], arr[j]] = [arr[j], arr[i]]; if (d.mv === 'post.photos') S.post.index = j; } renderAll(); save(); return; }
+  if (d.del) { const arr = getPath(S, d.del); if (d.del === 'post.photos') { ensureCrops(S.post).splice(+d.i, 1); if (+d.i === 0) S.post.thumb = null; } arr.splice(+d.i, 1); if (d.del === 'post.photos') S.post.index = clamp(S.post.index, 0, Math.max(0, arr.length - 1)); renderAll(); save(); return; }
+  if (d.mv) { const arr = getPath(S, d.mv), i = +d.i, j = i + +d.d; if (j >= 0 && j < arr.length) { if (d.mv === 'post.photos') { const cr = ensureCrops(S.post); [cr[i], cr[j]] = [cr[j], cr[i]]; if (i === 0 || j === 0) S.post.thumb = null; } [arr[i], arr[j]] = [arr[j], arr[i]]; if (d.mv === 'post.photos') S.post.index = j; } renderAll(); save(); return; }
   if (d.cmDel != null) { S.comments.items.splice(+d.cmDel, 1); renderAll(); save(); return; }
   if (d.cmMv != null) { const a = S.comments.items, i = +d.cmMv, j = i + +d.d; if (j >= 0 && j < a.length) [a[i], a[j]] = [a[j], a[i]]; renderAll(); save(); return; }
   if (t.id === 'cm-add') { S.comments.items.push({ id: uid(), avatar: null, username: 'zzunsiki_' + (S.comments.items.length + 1), verified: false, time: '방금', text: '댓글 내용', likes: '', liked: false, author: false, pinned: false, authorLiked: false, reply: false, more: 0 }); renderAll(); save(); return; }
@@ -850,6 +960,7 @@ document.addEventListener('click', e => {
     if (d.kAct === 'center') { k.x = 50; k.y = 50; }
     renderAll(); save(); return;
   }
+  if (d.cropReset) { const c = cropTarget(d.cropReset); if (c) { Object.assign(c, CROP0()); renderAll(); save(); } return; }
   if (t.id === 'export-btn') { exportCurrent(); return; }
   if (t.id === 'html-one') { exportHTML(false); return; }
   if (t.id === 'html-all') { exportHTML(true); return; }
