@@ -19,6 +19,7 @@
     <button role="tab" data-tab="story"><sup>03</sup>스토리</button>
     <button role="tab" data-tab="account"><sup>04</sup>내 계정</button>
   </nav>
+  <button class="btn ghost slots-btn" id="slots-btn">임시저장</button>
 </header>
 
 <main class="work">
@@ -30,6 +31,13 @@
         <button data-theme-set="dark">다크</button>
       </div>
       <button class="primary" id="export-btn">PNG 저장</button>
+    </div>
+    <div class="pv-bar pv-bar2">
+      <span class="pv-lbl">HTML 파일</span>
+      <div class="btn-row">
+        <button class="btn" id="html-one">이 화면만</button>
+        <button class="btn" id="html-all">전체 (계정·게시물·스토리 연결)</button>
+      </div>
     </div>
     <div class="pv-stage" id="pv-post" data-pane="post"></div>
     <div class="pv-stage" id="pv-comments" data-pane="comments"></div>
@@ -76,6 +84,10 @@
 
     <!-- 게시물 -->
     <div data-pane="post">
+      <details class="box" open>
+        <summary>게시물 목록 <small>프로필 피드에 이 순서로 나와요</small></summary>
+        <div id="post-list"></div>
+      </details>
       <details class="box" open>
         <summary>사진</summary>
         <div class="thumbs" id="post-thumbs"></div>
@@ -127,6 +139,10 @@
     <!-- 댓글 -->
     <div data-pane="comments">
       <details class="box" open>
+        <summary>어느 게시물의 댓글인가요?</summary>
+        <div id="cm-post-list"></div>
+      </details>
+      <details class="box" open>
         <summary>화면</summary>
         <div class="checks">
           <label><input type="checkbox" data-k="comments.backdrop"> 게시물 위에 시트로 표시</label>
@@ -144,6 +160,10 @@
 
     <!-- 스토리 -->
     <div data-pane="story">
+      <details class="box" open>
+        <summary>스토리 목록 <small>하이라이트에 연결할 수 있어요</small></summary>
+        <div id="story-list"></div>
+      </details>
       <details class="box" open>
         <summary>레이아웃</summary>
         <div class="layouts" id="layouts"></div>
@@ -222,6 +242,7 @@
       </details>
       <details class="box" open>
         <summary>피드 사진</summary>
+        <p class="muted">게시물 탭에서 만든 게시물이 피드 맨 앞에 나오고, 누르면 그 게시물로 가요. 여기서 넣는 사진은 그 뒤에 이어 붙는 사진이에요.</p>
         <div class="thumbs" id="grid-thumbs"></div>
         <label class="btn file">사진 추가 (여러 장)<input type="file" accept="image/*" multiple data-imgs="account.grid"></label>
         <label class="f">빈 칸 수 (사진이 없을 때)<input type="number" min="0" max="30" data-k="account.placeholders"></label>
@@ -237,10 +258,21 @@
 
 <div class="modal" id="modal" hidden>
   <div class="modal-card">
-    <div class="modal-head"><b>이미지 저장</b><button id="modal-close" aria-label="닫기">✕</button></div>
+    <div class="modal-head"><b>이미지 저장</b><button id="modal-close" data-close-modal aria-label="닫기">✕</button></div>
     <img id="modal-img" alt="결과 이미지">
     <p class="muted">모바일에서는 이미지를 길게 눌러 사진에 저장할 수 있어요.</p>
     <a class="btn primary" id="modal-dl" download="instagram.png">다운로드</a>
+  </div>
+</div>
+<div class="modal" id="slots-modal" hidden>
+  <div class="modal-card">
+    <div class="modal-head"><b>임시저장</b><button data-close-modal aria-label="닫기">✕</button></div>
+    <p class="muted">지금 작업을 이 브라우저에 저장해 두고 나중에 불러올 수 있어요. 사진도 함께 저장돼요. 다른 기기나 다른 브라우저에서는 보이지 않아요.</p>
+    <div class="slot-new">
+      <label class="f grow">저장 이름<input type="text" id="slot-name" maxlength="40"></label>
+      <button class="primary" id="slot-save">지금 상태 저장</button>
+    </div>
+    <div class="slot-list" id="slot-list"></div>
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>

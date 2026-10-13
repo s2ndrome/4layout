@@ -44,6 +44,8 @@ const I = {
   plus: (s = 24) => svg(stroke('M12 5v14M5 12h14', 2.4), s),
   pinned: (s = 12) => svg('<path d="M15 3l6 6-3 1-4 4 .5 4.5L13 20l-4-4-5 5 5-5-4-4 1.5-1.5L11 11l4-4z" fill="currentColor"/>', s),
   heartHL: (s = 24) => svg(stroke(HEART), s),
+  back: (s = 26) => svg(stroke('M15 4.5 7.5 12l7.5 7.5', 2.2), s),
+  multi: '<svg width="18" height="18" viewBox="0 0 24 24"><path d="M8 3h11a2 2 0 0 1 2 2v11" fill="none" stroke="#fff" stroke-width="2"/><rect x="3" y="7" width="14" height="14" rx="2" fill="#fff"/></svg>',
   photo: (s = 28) => svg(stroke('M3 7a2 2 0 0 1 2-2h2.5l1.5-2h6l1.5 2H19a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', 1.6), s),
   signal: '<svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".7" fill="currentColor"/><rect x="5" y="5.5" width="3" height="6.5" rx=".7" fill="currentColor"/><rect x="10" y="3" width="3" height="9" rx=".7" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx=".7" fill="currentColor"/></svg>',
   wifi: '<svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.3c2.3 0 4.4.9 6 2.4l1.1-1.1A10 10 0 0 0 8 .7 10 10 0 0 0 .9 3.6L2 4.7a8.4 8.4 0 0 1 6-2.4zm0 3.3c1.4 0 2.6.5 3.6 1.4l1.1-1.1A6.7 6.7 0 0 0 8 4a6.7 6.7 0 0 0-4.7 1.9L4.4 7c1-.9 2.2-1.4 3.6-1.4zM8 9a1.6 1.6 0 0 1 1.2.5L8 11.3 6.8 9.5C7.1 9.2 7.5 9 8 9z" fill="currentColor"/></svg>',
@@ -67,57 +69,115 @@ function fmt(text) {
 
 /* ───────── 상태 ───────── */
 const KEY = 'insta-maker-v1';
-function defaults() {
+function newComments() {
   return {
-    ui: { tab: 'post', theme: 'light', status: true, clock: '9:41', sbIcons: true, battery: 100, fontScale: 1 },
-    profile: { username: 'your.id', name: '이름', avatar: null, verified: false, ring: false },
-    post: {
-      photos: [], index: 0, ratio: '4/5', location: '', collab: '', follow: false,
-      countStyle: 'inline', likes: '1,234', commentCount: '56', reposts: '8', shares: '21', likedBy: '',
-      liked: false, saved: false, showRepost: true,
-      caption: '오늘의 기록 📷\n#일상 #daily', collapse: false, time: '3시간 전',
-    },
-    comments: {
-      backdrop: true, height: 'half',
-      items: [
-        { id: uid(), avatar: null, username: 'zzunsiki_1', verified: false, time: '2시간', text: '신드롬을 사랑하자', likes: '12', liked: true, author: false, pinned: false, authorLiked: true, reply: false, more: 0 },
-        { id: uid(), avatar: null, username: '', verified: false, time: '1시간', text: '@zzunsiki_1 고마워 ❤️', likes: '3', liked: false, author: true, pinned: false, authorLiked: false, reply: true, more: 0 },
-        { id: uid(), avatar: null, username: 'zzunsiki_2', verified: false, time: '45분', text: '성유진을 아껴주자', likes: '', liked: false, author: false, pinned: false, authorLiked: false, reply: false, more: 2 },
-      ],
-    },
-    story: {
-      layout: '4', cells: [], sel: 0, gap: 0.5, gapColor: '#ffffff',
-      bg: 'linear-gradient(160deg,#833ab4,#fd1d1d 55%,#fcb045)',
-      stickers: [], selSticker: null,
-      showTop: true, count: 3, current: 1, progress: 40, time: '3시간', bottom: 'reply',
-    },
-    account: {
-      own: true, private: false, nav: true, showHL: true,
-      posts: '24', followers: '1,234', following: '321', category: '', bio: '좋아하는 것들을 기록해요 ✨', link: '', mutual: '',
-      highlights: [{ id: uid(), title: '일상', img: null }, { id: uid(), title: '여행', img: null }],
-      grid: [], placeholders: 9,
-    },
+    backdrop: true, height: 'half',
+    items: [
+      { id: uid(), avatar: null, username: 'zzunsiki_1', verified: false, time: '2시간', text: '신드롬을 사랑하자', likes: '12', liked: true, author: false, pinned: false, authorLiked: true, reply: false, more: 0 },
+      { id: uid(), avatar: null, username: '', verified: false, time: '1시간', text: '@zzunsiki_1 고마워 ❤️', likes: '3', liked: false, author: true, pinned: false, authorLiked: false, reply: true, more: 0 },
+      { id: uid(), avatar: null, username: 'zzunsiki_2', verified: false, time: '45분', text: '성유진을 아껴주자', likes: '', liked: false, author: false, pinned: false, authorLiked: false, reply: false, more: 2 },
+    ],
   };
 }
-let S = load();
-function load() {
+function newPost() {
+  return {
+    photos: [], index: 0, ratio: '4/5', location: '', collab: '', follow: false,
+    countStyle: 'inline', likes: '1,234', commentCount: '56', reposts: '8', shares: '21', likedBy: '',
+    liked: false, saved: false, showRepost: true,
+    caption: '오늘의 기록 📷\n#일상 #daily', collapse: false, time: '3시간 전',
+    comments: newComments(),
+  };
+}
+function newStory() {
+  return {
+    layout: '4', cells: [], sel: 0, gap: 0.5, gapColor: '#ffffff',
+    bg: 'linear-gradient(160deg,#833ab4,#fd1d1d 55%,#fcb045)',
+    stickers: [], selSticker: null,
+    showTop: true, count: 3, current: 1, progress: 40, time: '3시간', bottom: 'reply',
+  };
+}
+function newAccount() {
+  return {
+    own: true, private: false, nav: true, showHL: true,
+    posts: '24', followers: '1,234', following: '321', category: '', bio: '좋아하는 것들을 기록해요 ✨', link: '', mutual: '',
+    highlights: [{ id: uid(), title: '일상', img: null, story: 0 }, { id: uid(), title: '여행', img: null, story: -1 }],
+    grid: [], placeholders: 9,
+  };
+}
+function defaults() {
+  return {
+    ui: { tab: 'post', theme: 'light', status: true, clock: '9:41', sbIcons: true, battery: 100, fontScale: 1, postIdx: 0, storyIdx: 0 },
+    profile: { username: 'your.id', name: '이름', avatar: null, verified: false, ring: false },
+    posts: [newPost()],
+    stories: [newStory()],
+    account: newAccount(),
+  };
+}
+// S.post / S.comments / S.story 는 지금 고른 게시물·스토리를 가리킨다 (저장할 때는 빠짐)
+function attach(st) {
+  Object.defineProperties(st, {
+    post: { get() { return this.posts[clamp(this.ui.postIdx, 0, this.posts.length - 1)]; }, set(v) { this.posts[clamp(this.ui.postIdx, 0, this.posts.length - 1)] = v; }, configurable: true },
+    comments: { get() { return this.post.comments; }, set(v) { this.post.comments = v; }, configurable: true },
+    story: { get() { return this.stories[clamp(this.ui.storyIdx, 0, this.stories.length - 1)]; }, set(v) { this.stories[clamp(this.ui.storyIdx, 0, this.stories.length - 1)] = v; }, configurable: true },
+  });
+  return st;
+}
+function hydrate(saved) {
   const d = defaults();
-  let saved = null;
-  try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { /* 저장소 사용 불가 */ }
-  if (!saved) return d;
-  for (const k of Object.keys(d)) if (saved[k] && typeof saved[k] === 'object') d[k] = Object.assign(d[k], saved[k]);
-  if (d.story.showUI === false) { d.story.showTop = false; d.story.bottom = 'none'; }
-  delete d.story.showUI;
-  return d;
+  if (!saved || typeof saved !== 'object') return attach(d);
+  for (const k of ['ui', 'profile', 'account']) if (saved[k] && typeof saved[k] === 'object') d[k] = Object.assign(d[k], saved[k]);
+  if (Array.isArray(saved.posts) && saved.posts.length) d.posts = saved.posts.map(x => Object.assign(newPost(), x, { comments: Object.assign(newComments(), x.comments) }));
+  else if (saved.post) d.posts = [Object.assign(newPost(), saved.post, { comments: Object.assign(newComments(), saved.comments) })];
+  if (Array.isArray(saved.stories) && saved.stories.length) d.stories = saved.stories.map(x => Object.assign(newStory(), x));
+  else if (saved.story) d.stories = [Object.assign(newStory(), saved.story)];
+  d.stories.forEach(x => { if (x.showUI === false) { x.showTop = false; x.bottom = 'none'; } delete x.showUI; });
+  d.account.highlights.forEach(h => { if (h.story == null) h.story = -1; });
+  d.ui.postIdx = clamp(+d.ui.postIdx || 0, 0, d.posts.length - 1);
+  d.ui.storyIdx = clamp(+d.ui.storyIdx || 0, 0, d.stories.length - 1);
+  return attach(d);
+}
+
+/* 브라우저 저장소 (IndexedDB: 사진까지 저장 가능) */
+const DB = (() => {
+  let opening = null;
+  const open = () => opening || (opening = new Promise((res, rej) => {
+    const r = indexedDB.open('insta-maker', 1);
+    r.onupgradeneeded = () => { r.result.createObjectStore('kv'); r.result.createObjectStore('slots', { keyPath: 'id' }); };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  }));
+  const run = async (store, mode, fn) => {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const t = db.transaction(store, mode); const req = fn(t.objectStore(store));
+      t.oncomplete = () => res(req && req.result);
+      t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+    });
+  };
+  return {
+    get: k => run('kv', 'readonly', st => st.get(k)),
+    set: (k, v) => run('kv', 'readwrite', st => st.put(v, k)),
+    slots: () => run('slots', 'readonly', st => st.getAll()),
+    getSlot: id => run('slots', 'readonly', st => st.get(id)),
+    putSlot: v => run('slots', 'readwrite', st => st.put(v)),
+    delSlot: id => run('slots', 'readwrite', st => st.delete(id)),
+  };
+})();
+
+let S = hydrate(null);
+async function loadSaved() {
+  try { const v = await DB.get('current'); if (v) return JSON.parse(v); } catch { /* IndexedDB 사용 불가 */ }
+  try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { return null; }
 }
 let saveTimer = null, warnedQuota = false;
 function save() {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    try { localStorage.setItem(KEY, JSON.stringify(S)); return; } catch { /* 용량 초과 */ }
+  saveTimer = setTimeout(async () => {
+    const json = JSON.stringify(S);
+    try { await DB.set('current', json); return; } catch { /* 아래로 */ }
+    try { localStorage.setItem(KEY, json); return; } catch { /* 용량 초과 */ }
     try {
-      const lite = JSON.parse(JSON.stringify(S, (k, v) => (typeof v === 'string' && v.startsWith('data:image') ? null : v)));
-      localStorage.setItem(KEY, JSON.stringify(lite));
+      localStorage.setItem(KEY, JSON.stringify(S, (k, v) => (typeof v === 'string' && v.startsWith('data:image') ? null : v)));
       if (!warnedQuota) { warnedQuota = true; toast('사진 용량이 커서 사진은 브라우저에 저장되지 않아요. (글자는 저장됨)'); }
     } catch { /* 무시 */ }
   }, 300);
@@ -138,14 +198,15 @@ function avatarImg(src, cls = 'av', ring = false) {
 const V = () => (S.profile.verified ? verified(14) : '');
 
 /* ───────── 게시물 ───────── */
-function postHTML() {
-  const p = S.post, pr = S.profile;
+function postHTML(p = S.post, o = {}) {
+  const pr = S.profile;
   const photos = p.photos.length ? p.photos : [null];
   const idx = clamp(p.index, 0, photos.length - 1);
   const cur = photos[idx];
   const [rw, rh] = p.ratio.split('/').map(Number);
   const inline = p.countStyle === 'inline';
-  const act = (icon, n) => `<span class="a">${icon}${inline && n ? `<span>${esc(n)}</span>` : ''}</span>`;
+  const act = (icon, n, attr = '') => `<span class="a"${attr}>${icon}${inline && n ? `<span>${esc(n)}</span>` : ''}</span>`;
+  const openC = o.viewer ? ` data-open="${o.cid}"` : '';
   const dots = photos.length > 1 ? `<div class="p-dots${inline ? ' row' : ''}">${photos.slice(0, 5).map((_, i) => `<i class="${i === Math.min(idx, 4) ? 'on' : ''}"></i>`).join('')}</div>` : '';
   const user = `<span class="t">${esc(pr.username)}</span>${V()}${p.collab ? `<span class="t">&nbsp;및&nbsp;${esc(p.collab)}</span>` : ''}`;
 
@@ -171,15 +232,16 @@ function postHTML() {
       ${p.follow ? '<span class="follow-btn">팔로우</span>' : ''}
       ${I.more()}
     </header>
-    <div class="p-media" style="aspect-ratio:${rw}/${rh}">
-      ${cur ? `<img src="${cur}" alt="">` : `<div class="ph-empty">${I.photo()}<span>오른쪽에서 사진을 추가하세요</span></div>`}
+    <div class="p-media" style="aspect-ratio:${rw}/${rh}"${o.viewer && photos.length > 1 ? ' data-car' : ''}>
+      ${o.viewer && photos.length > 1 ? photos.map((src, i) => `<img src="${src}" alt="" data-ph="${i}"${i === idx ? '' : ' hidden'}>`).join('')
+        : cur ? `<img src="${cur}" alt="">` : o.viewer ? '' : `<div class="ph-empty">${I.photo()}<span>사진을 추가하세요</span></div>`}
       ${photos.length > 1 ? `<span class="p-count">${idx + 1}/${photos.length}</span>` : ''}
     </div>
     ${inline ? dots : ''}
     <div class="p-act">
       <div class="p-act-l">
         ${act(I.heart(p.liked), p.likes)}
-        ${act(I.comment(), p.commentCount)}
+        ${act(I.comment(), p.commentCount, openC)}
         ${p.showRepost ? act(I.repost(), p.reposts) : ''}
         ${act(I.share(), p.shares)}
       </div>
@@ -190,7 +252,7 @@ function postHTML() {
     <div class="p-body">
       ${likedBy}
       ${p.caption ? `<div class="p-cap"><b>${esc(pr.username)}</b>${V()} ${fmt(cap)}${more}</div>` : ''}
-      ${!inline && p.commentCount ? `<div class="sec">댓글 ${esc(p.commentCount)}개 모두 보기</div>` : ''}
+      ${!inline && p.commentCount ? `<div class="sec"${openC}>댓글 ${esc(p.commentCount)}개 모두 보기</div>` : ''}
       ${p.time ? `<div class="p-time sec">${esc(p.time)}</div>` : ''}
     </div>
   </article>`;
@@ -218,11 +280,11 @@ function commentHTML(m) {
     <div class="c-l">${I.heart(m.liked, 14)}<span>${esc(m.likes)}</span></div>
   </div>`;
 }
-function renderComments() {
-  const c = S.comments, pr = S.profile;
-  const sheet = `
+function sheetHTML(c, o = {}) {
+  const pr = S.profile;
+  return `
   <div class="sheet">
-    <div class="grab"></div>
+    <div class="grab"${o.viewer ? ' data-close' : ''}></div>
     <div class="s-title">댓글</div>
     <div class="s-list">${c.items.map(commentHTML).join('')}</div>
     <div class="s-foot">
@@ -230,25 +292,38 @@ function renderComments() {
       <div class="s-in">${avatarImg(pr.avatar)}<div class="s-ph"><span>${esc(pr.username)}님에게 댓글 추가...</span></div></div>
     </div>
   </div>`;
-  const t = S.ui.theme;
+}
+function renderComments() {
+  const c = S.comments, sheet = sheetHTML(c), t = S.ui.theme;
   $('#pv-comments').innerHTML = c.backdrop
     ? `<div style="${fsStyle()}" class="ig shot phone" data-theme="${t}"><div class="phone-bg">${statusBar()}${postHTML()}</div><div class="dim"></div><div class="sheet-wrap ${c.height}">${sheet}</div></div>`
     : `<div style="${fsStyle()}" class="ig shot cm-plain" data-theme="${t}">${sheet}</div>`;
 }
 
 /* ───────── 프로필 ───────── */
-function renderAccount() {
+function storyCover(i) {
+  const st = S.stories[i];
+  return st ? (st.cells.find(c => c && c.src) || {}).src || null : null;
+}
+function accountHTML(o = {}) {
   const a = S.account, pr = S.profile;
   const own = a.own;
-  const hls = a.highlights.map(h => `<div class="hl"><div class="hl-c">${h.img ? `<img src="${h.img}" alt="">` : '<div></div>'}</div><span>${esc(h.title)}</span></div>`).join('')
+  const hls = a.highlights.map(h => {
+    const cover = h.img || storyCover(h.story);
+    const link = h.story >= 0 && S.stories[h.story] ? (o.viewer ? ` data-story="${h.story}"` : ` data-go-story="${h.story}"`) : '';
+    return `<div class="hl"${link}><div class="hl-c">${cover ? `<img src="${cover}" alt="">` : '<div></div>'}</div><span>${esc(h.title)}</span></div>`;
+  }).join('')
     + (own ? `<div class="hl"><div class="hl-c"><div class="hl-new">${I.plus(26)}</div></div><span>신규</span></div>` : '');
-  const cells = a.grid.length ? a.grid.map(src => `<div><img src="${src}" alt=""></div>`).join('') : Array.from({ length: a.placeholders }, () => '<div></div>').join('');
+  let cells = S.posts.map((p, i) => `<div ${o.viewer ? `data-go="s-post-${i}"` : `data-go-post="${i}"`}>${p.photos[0] ? `<img src="${p.photos[0]}" alt="">` : ''}${p.photos.length > 1 ? `<span class="g-multi">${I.multi}</span>` : ''}</div>`)
+    .concat(a.grid.map(src => `<div><img src="${src}" alt=""></div>`));
+  if (!S.posts.some(p => p.photos.length) && !a.grid.length) while (cells.length < a.placeholders) cells.push('<div></div>');
+  cells = cells.join('');
   const btns = own
     ? '<div>프로필 편집</div><div>프로필 공유</div>'
     : '<div class="blue">팔로우</div><div>메시지</div>';
   const nav = a.nav ? `<div class="a-nav">${I.home()}${I.reels(26)}${I.share(26)}${I.search()}${avatarImg(pr.avatar)}</div>` : '';
-  $('#pv-account').innerHTML = `
-  <div style="${fsStyle()}" class="ig shot acct${a.nav ? ' phone' : ''}" data-theme="${S.ui.theme}">
+  return `
+  <div style="${fsStyle()}" class="ig shot acct${a.nav && !o.viewer ? ' phone' : ''}" data-theme="${S.ui.theme}">
     ${statusBar()}
     <div class="a-top">
       <div class="a-un">${a.private ? I.lock(18) : ''}<span class="t">${esc(pr.username)}</span>${own ? I.chev() : ''}${pr.verified ? verified(18) : ''}</div>
@@ -279,6 +354,7 @@ function renderAccount() {
     ${nav}
   </div>`;
 }
+function renderAccount() { $('#pv-account').innerHTML = accountHTML(); }
 
 /* ───────── 스토리 ───────── */
 const LAYOUTS = {
@@ -301,11 +377,12 @@ const BGS = [
 const TEXT_COLORS = ['#ffffff', '#000000', '#3897f0', '#70c050', '#fdcb5c', '#fd8d32', '#ed4956', '#d10869', '#a307ba', '#f8d7e0'];
 const FONTS = { classic: '클래식', modern: '모던', neon: '네온', type: '타자기', strong: '스트롱', serif: '명조' };
 
-function cellsArr() {
-  const n = LAYOUTS[S.story.layout].n;
-  while (S.story.cells.length < n) S.story.cells.push({ src: null, fx: .5, fy: .5, z: 1 });
-  return S.story.cells.slice(0, n);
+function cellsOf(s) {
+  const n = LAYOUTS[s.layout].n;
+  while (s.cells.length < n) s.cells.push({ src: null, fx: .5, fy: .5, z: 1 });
+  return s.cells.slice(0, n);
 }
+function cellsArr() { return cellsOf(S.story); }
 function hexToRgb(h) { const m = h.replace('#', '').match(/.{2}/g) || ['ff', 'ff', 'ff']; return m.map(x => parseInt(x, 16)); }
 function contrast(h) { const [r, g, b] = hexToRgb(h); return (r * 299 + g * 587 + b * 114) / 1000 > 160 ? '#000' : '#fff'; }
 
@@ -338,18 +415,18 @@ function stickerInner(k) {
 }
 function stickerTransform(k) { return `translate(-50%,-50%) rotate(${k.rot}deg) scale(${k.scale})`; }
 
-function renderStory() {
-  const s = S.story, pr = S.profile, L = LAYOUTS[s.layout];
-  const cells = cellsArr();
+function storyHTML(s, o = {}) {
+  const pr = S.profile, L = LAYOUTS[s.layout], ed = !o.viewer;
+  const cells = cellsOf(s);
   const grid = `<div class="st-grid" style="grid-template-columns:${L.cols};grid-template-rows:${L.rows};gap:${s.gap}cqw;${s.gap ? `background:${s.gapColor}` : ''}">
-    ${cells.map((c, i) => `<div class="cell${i === s.sel && L.n > 1 ? ' sel' : ''}" data-cell="${i}"${!c.src && s.gap ? ` style="background:${s.bg}"` : ''}>${c.src ? `<img src="${c.src}" alt="">` : `<div class="cell-empty">${I.plus(28)}<span>사진 추가</span></div>`}</div>`).join('')}
+    ${cells.map((c, i) => `<div class="cell${ed && i === s.sel && L.n > 1 ? ' sel' : ''}" data-cell="${i}"${!c.src && s.gap ? ` style="background:${s.bg}"` : ''}>${c.src ? `<img src="${c.src}" alt="">` : ed ? `<div class="cell-empty">${I.plus(28)}<span>사진 추가</span></div>` : ''}</div>`).join('')}
   </div>`;
-  const stickers = s.stickers.map(k => `<div class="k${k.id === s.selSticker ? ' sel' : ''}" data-k-id="${k.id}" style="left:${k.x}%;top:${k.y}%;transform:${stickerTransform(k)}">${stickerInner(k)}</div>`).join('');
+  const stickers = s.stickers.map(k => `<div class="k${ed && k.id === s.selSticker ? ' sel' : ''}" data-k-id="${k.id}" style="left:${k.x}%;top:${k.y}%;transform:${stickerTransform(k)}">${stickerInner(k)}</div>`).join('');
 
   let ui = '';
   {
     const n = clamp(+s.count || 1, 1, 12), cur = clamp(+s.current || 1, 1, n);
-    const bars = Array.from({ length: n }, (_, i) => `<i><b style="width:${i + 1 < cur ? 100 : i + 1 === cur ? s.progress : 0}%"></b></i>`).join('');
+    const bars = Array.from({ length: n }, (_, i) => `<i><b${i + 1 === cur ? ' data-cur' : ''} style="width:${i + 1 < cur ? 100 : i + 1 === cur ? s.progress : 0}%"></b></i>`).join('');
     const top = S.ui.status ? 13.5 : 2.4;
     let bottom = '';
     if (s.bottom === 'reply') bottom = `<div class="s-shade-b"></div><div class="s-bottom"><div class="s-input">메시지 보내기</div>${I.heart(false)}${I.share()}</div>`;
@@ -358,12 +435,14 @@ function renderStory() {
       ${S.ui.status || s.showTop ? '<div class="s-shade-t"></div>' : ''}
       ${S.ui.status ? `<div class="s-sb">${sbInner()}</div>` : ''}
       ${s.showTop ? `<div class="s-bars" style="top:${top}cqw">${bars}</div>
-      <div class="s-head" style="top:${top + 2.6}cqw">${avatarImg(pr.avatar)}<b>${esc(pr.username)}</b>${pr.verified ? verified(13) : ''}<span class="tm">${esc(s.time)}</span><span class="sp"></span>${I.more()}${I.close()}</div>` : ''}
+      <div class="s-head" style="top:${top + 2.6}cqw">${avatarImg(pr.avatar)}<b>${esc(pr.username)}</b>${pr.verified ? verified(13) : ''}<span class="tm">${esc(s.time)}</span><span class="sp"></span>${I.more()}${o.viewer && !o.noClose ? `<span class="v-x" data-close>${I.close()}</span>` : I.close()}</div>` : ''}
       ${bottom}
     </div>`;
   }
-  const stage = $('#pv-story');
-  stage.innerHTML = `<div class="story shot" id="story" style="background:${s.bg};${fsStyle()}">${grid}${stickers}${ui}</div>`;
+  return `<div class="story shot"${ed ? ' id="story"' : ''} style="background:${s.bg};${fsStyle()}">${grid}${stickers}${ui}</div>`;
+}
+function renderStory() {
+  $('#pv-story').innerHTML = storyHTML(S.story);
   layoutCells();
 }
 function fitCellImg(cellEl, c) {
@@ -492,6 +571,17 @@ function onStoryWheel(e) {
 function thumbsHTML(arr, path, curIdx) {
   return arr.map((src, i) => `<div class="thumb${i === curIdx ? ' on' : ''}"><img src="${src}" data-thumb="${path}" data-i="${i}" alt=""><button class="x" data-del="${path}" data-i="${i}" aria-label="삭제">✕</button><div class="mv"><button data-mv="${path}" data-i="${i}" data-d="-1">◀</button><button data-mv="${path}" data-i="${i}" data-d="1">▶</button></div></div>`).join('');
 }
+function listBarHTML(kind) {
+  const arr = kind === 'post' ? S.posts : S.stories, cur = kind === 'post' ? S.ui.postIdx : S.ui.storyIdx;
+  const name = kind === 'post' ? '게시물' : '스토리';
+  return `<div class="chips">${arr.map((_, i) => `<button data-pick-${kind}="${i}" class="${i === cur ? 'on' : ''}">${name} ${i + 1}</button>`).join('')}<button data-new-${kind}>+ 새 ${name}</button></div>
+    <div class="btn-row"><button class="btn" data-dup-${kind}>${name} ${cur + 1} 복제</button>${arr.length > 1 ? `<button class="btn danger" data-del-${kind}>${name} ${cur + 1} 삭제</button>` : ''}</div>`;
+}
+function renderLists() {
+  $('#post-list').innerHTML = listBarHTML('post');
+  $('#cm-post-list').innerHTML = listBarHTML('post');
+  $('#story-list').innerHTML = listBarHTML('story');
+}
 function renderPostEditor() {
   $('#post-thumbs').innerHTML = thumbsHTML(S.post.photos, 'post.photos', S.post.index);
 }
@@ -527,10 +617,12 @@ function renderCommentEditor() {
 function renderHlEditor() {
   $('#hl-editor').innerHTML = S.account.highlights.map((h, i) => `
   <div class="item"><div class="item-head">
-    <label title="커버 사진"><img src="${h.img || DEFAULT_AVATAR}" alt=""><input type="file" accept="image/*" data-img="account.highlights.${i}.img"></label>
+    <label title="커버 사진"><img src="${h.img || storyCover(h.story) || DEFAULT_AVATAR}" alt=""><input type="file" accept="image/*" data-img="account.highlights.${i}.img"></label>
     <div class="grow"><label class="f" style="margin:0"><input type="text" data-k="account.highlights.${i}.title"></label></div>
     <button data-hl-del="${i}" aria-label="삭제">✕</button>
-  </div></div>`).join('');
+  </div>
+  <label class="f">누르면 열리는 스토리<select data-k="account.highlights.${i}.story" data-num><option value="-1">없음</option>${S.stories.map((_, j) => `<option value="${j}">스토리 ${j + 1}</option>`).join('')}</select></label>
+  </div>`).join('');
   syncForm($('#hl-editor'));
 }
 function renderLayouts() {
@@ -623,14 +715,14 @@ function syncForm(root = document) {
   $$('[data-k]', root).forEach(el => {
     const v = getPath(S, el.dataset.k);
     if (el.type === 'checkbox') el.checked = !!v;
-    else if (v != null && document.activeElement !== el) el.value = v;
+    else if (v != null && document.activeElement !== el) el.value = String(v);
   });
 }
 const STRUCTURAL = /^comments\.items\.\d+\.author$/;
 document.addEventListener('input', e => {
   const el = e.target, k = el.dataset.k;
   if (!k) return;
-  let v = el.type === 'checkbox' ? el.checked : (el.type === 'range' || el.type === 'number') ? +el.value : el.value;
+  let v = el.type === 'checkbox' ? el.checked : (el.type === 'range' || el.type === 'number' || el.hasAttribute('data-num')) ? +el.value : el.value;
   setPath(S, k, v);
   if (STRUCTURAL.test(k) || el.hasAttribute('data-restructure')) renderCommentEditor();
   if (/^story\.stickers\.\d+\.(scale|rot)$/.test(k)) {
@@ -710,6 +802,24 @@ document.addEventListener('click', e => {
   if (!t) return;
   const d = t.dataset;
   if (d.tab) { S.ui.tab = d.tab; renderAll(); save(); return; }
+  if (d.pickPost != null) { S.ui.postIdx = +d.pickPost; renderAll(); save(); return; }
+  if (d.pickStory != null) { S.ui.storyIdx = +d.pickStory; renderAll(); save(); return; }
+  if (d.newPost != null) { S.posts.push(newPost()); S.ui.postIdx = S.posts.length - 1; renderAll(); save(); return; }
+  if (d.newStory != null) { S.stories.push(newStory()); S.ui.storyIdx = S.stories.length - 1; renderAll(); save(); return; }
+  if (d.dupPost != null) { S.posts.splice(S.ui.postIdx + 1, 0, clone(S.post)); S.ui.postIdx++; renderAll(); save(); toast('게시물을 복제했어요.'); return; }
+  if (d.dupStory != null) { S.stories.splice(S.ui.storyIdx + 1, 0, clone(S.story)); S.ui.storyIdx++; S.account.highlights.forEach(h => { if (h.story > S.ui.storyIdx - 1) h.story++; }); renderAll(); save(); toast('스토리를 복제했어요.'); return; }
+  if (d.delPost != null) {
+    if (!armed(t, '한 번 더 누르면 삭제')) return;
+    S.posts.splice(S.ui.postIdx, 1); S.ui.postIdx = clamp(S.ui.postIdx, 0, S.posts.length - 1); renderAll(); save(); return;
+  }
+  if (d.delStory != null) {
+    if (!armed(t, '한 번 더 누르면 삭제')) return;
+    const gone = S.ui.storyIdx;
+    S.stories.splice(gone, 1); S.ui.storyIdx = clamp(gone, 0, S.stories.length - 1);
+    S.account.highlights.forEach(h => { if (h.story === gone) h.story = -1; else if (h.story > gone) h.story--; });
+    renderAll(); save(); return;
+  }
+  if (d.closeModal != null) { t.closest('.modal').hidden = true; return; }
   if (d.themeSet) { S.ui.theme = d.themeSet; renderAll(); save(); return; }
   if (d.thumb === 'post.photos') { S.post.index = +d.i; renderAll(); save(); return; }
   if (d.del) { const arr = getPath(S, d.del); arr.splice(+d.i, 1); if (d.del === 'post.photos') S.post.index = clamp(S.post.index, 0, Math.max(0, arr.length - 1)); renderAll(); save(); return; }
@@ -741,14 +851,39 @@ document.addEventListener('click', e => {
     renderAll(); save(); return;
   }
   if (t.id === 'export-btn') { exportCurrent(); return; }
+  if (t.id === 'html-one') { exportHTML(false); return; }
+  if (t.id === 'html-all') { exportHTML(true); return; }
+  if (t.id === 'slots-btn') { openSlots(); return; }
+  if (t.id === 'slot-save') { saveSlot(); return; }
+  if (d.slotLoad) { if (armed(t, '덮어쓰고 불러오기')) loadSlot(d.slotLoad); return; }
+  if (d.slotDel) { if (armed(t, '한 번 더 누르면 삭제')) delSlot(d.slotDel); return; }
   if (t.id === 'clock-now') { const d = new Date(); S.ui.clock = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; syncForm(); renderPreview(); save(); return; }
   if (t.id === 'reset-btn') {
-    if (!confirm('현재 화면의 내용을 처음 상태로 되돌릴까요?')) return;
-    const tab = S.ui.tab; S[tab] = defaults()[tab]; renderAll(); save(); return;
+    if (!armed(t, '한 번 더 누르면 초기화')) return;
+    const tab = S.ui.tab;
+    if (tab === 'post') S.post = newPost();
+    else if (tab === 'comments') S.comments = newComments();
+    else if (tab === 'story') S.story = newStory();
+    else S.account = newAccount();
+    renderAll(); save(); return;
   }
-  if (t.id === 'modal-close') { $('#modal').hidden = true; }
 });
-$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') e.currentTarget.hidden = true; });
+$$('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.hidden = true; }));
+// 실수로 누르지 않게 두 번 눌러야 실행되는 버튼
+function armed(btn, label) {
+  if (btn.dataset.armed) return true;
+  btn.dataset.armed = btn.textContent; btn.textContent = label;
+  setTimeout(() => { if (btn.dataset.armed) { btn.textContent = btn.dataset.armed; delete btn.dataset.armed; } }, 3000);
+  return false;
+}
+// 프로필 미리보기: 썸네일 → 게시물, 하이라이트 → 스토리
+$('#pv-account').addEventListener('click', e => {
+  const g = e.target.closest('[data-go-post], [data-go-story]');
+  if (!g) return;
+  if (g.dataset.goPost != null) { S.ui.postIdx = +g.dataset.goPost; S.ui.tab = 'post'; }
+  else { S.ui.storyIdx = +g.dataset.goStory; S.ui.tab = 'story'; }
+  renderAll(); save(); scrollTo({ top: 0, behavior: 'smooth' });
+});
 document.addEventListener('keydown', e => {
   if ((e.key === 'Delete' || e.key === 'Backspace') && S.ui.tab === 'story' && S.story.selSticker && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
     S.story.stickers = S.story.stickers.filter(k => k.id !== S.story.selSticker);
@@ -781,6 +916,7 @@ function renderAll() {
   $('#theme-seg').style.visibility = t === 'story' ? 'hidden' : '';
   $$('[data-pane]').forEach(el => { el.hidden = el.dataset.pane !== t; });
   $('#hero-t').textContent = { post: 'Post', comments: 'Comments', story: 'Story', account: 'Profile' }[t];
+  renderLists();
   if (t === 'post') renderPostEditor();
   if (t === 'comments') renderCommentEditor();
   if (t === 'story') { renderLayouts(); renderCellEditor(); renderStickerEditor(); }
@@ -853,5 +989,234 @@ function toast(msg) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3200);
 }
 
+/* ───────── HTML 파일로 저장 ───────── */
+const FONT_URL = 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Do+Hyeon&family=Black+Han+Sans&family=Nanum+Pen+Script&family=Nanum+Gothic+Coding:wght@400;700&family=Nanum+Myeongjo:wght@700;800&display=swap';
+const VIEWER_CSS = `
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; min-height: 100vh; min-height: 100dvh; display: flex; justify-content: center; background: #fff; }
+body.v-dark { background: #000; }
+body.v-lock { overflow: hidden; }
+.v-scr { width: 100%; max-width: 470px; }
+.v-scr[hidden], .v-ov[hidden] { display: none; }
+.v-scr > .ig { width: 100%; max-width: none; overflow: visible; }
+.ig.phone { height: 100vh; height: 100dvh; }
+.v-top { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; height: 44px; padding: 0 10px; background: var(--ig-bg); }
+.v-top button { border: 0; background: none; padding: 0; color: inherit; display: flex; cursor: pointer; }
+.v-tt { text-align: center; line-height: 1.2; }
+.v-tt small { display: block; font-size: 12px; color: var(--ig-sec); text-transform: uppercase; }
+.v-tt b { font-size: 16px; font-weight: 700; }
+.a-nav { position: sticky; bottom: 0; }
+[data-go], [data-open], [data-story], [data-car], [data-close] { cursor: pointer; }
+.v-ov { position: fixed; inset: 0; z-index: 20; }
+.v-dim { position: absolute; inset: 0; background: rgba(0,0,0,.5); }
+.v-sheet { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 100%; max-width: 470px; height: 78%; display: flex; background: none; }
+.v-sheet .sheet { width: 100%; }
+.v-sheet .s-list { overflow-y: auto; }
+.v-st { background: #000; display: flex; align-items: center; justify-content: center; }
+.v-st .story { width: min(100vw, 56.25vh); width: min(100vw, 56.25dvh); max-width: none; border-radius: 0; touch-action: auto; }
+.v-st .k { cursor: default; }
+.v-x { pointer-events: auto; display: flex; cursor: pointer; }
+.cm-plain .sheet { min-height: 100vh; min-height: 100dvh; }
+`;
+const VIEWER_JS = `(function () {
+  var all = function (q) { return Array.prototype.slice.call(document.querySelectorAll(q)); };
+  var timer = null;
+  function show(id) { var el = document.getElementById(id); if (!el) return; all('.v-scr').forEach(function (x) { x.hidden = x !== el; }); window.scrollTo(0, 0); }
+  function closeAll() { all('.v-ov[data-closable]').forEach(function (o) { o.hidden = true; }); document.body.classList.remove('v-lock'); clearTimeout(timer); }
+  function open(id) { var el = document.getElementById(id); if (!el) return null; el.hidden = false; document.body.classList.add('v-lock'); return el; }
+  function play(el) {
+    var b = el.querySelector('.s-bars b[data-cur]'); if (!b) return;
+    b.style.transition = 'none'; b.style.width = '0%'; void b.offsetWidth;
+    b.style.transition = 'width 5s linear'; b.style.width = '100%';
+    clearTimeout(timer); timer = setTimeout(closeAll, 5000);
+  }
+  function slide(m, x) {
+    var imgs = m.querySelectorAll('img[data-ph]'), n = imgs.length, cur = 0;
+    for (var i = 0; i < n; i++) if (!imgs[i].hidden) cur = i;
+    var r = m.getBoundingClientRect(), nx = Math.max(0, Math.min(n - 1, cur + (x > r.left + r.width / 2 ? 1 : -1)));
+    for (var j = 0; j < n; j++) imgs[j].hidden = j !== nx;
+    var c = m.querySelector('.p-count'); if (c) c.textContent = (nx + 1) + '/' + n;
+    var post = m.closest('.post'), dots = post ? post.querySelectorAll('.p-dots i') : [];
+    for (var k = 0; k < dots.length; k++) dots[k].className = k === Math.min(nx, dots.length - 1) ? 'on' : '';
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-car],[data-close],[data-back],[data-go],[data-open],[data-story]'); if (!t) return;
+    if (t.hasAttribute('data-car')) slide(t, e.clientX);
+    else if (t.hasAttribute('data-close')) closeAll();
+    else if (t.hasAttribute('data-back')) show('s-home');
+    else if (t.getAttribute('data-go')) show(t.getAttribute('data-go'));
+    else if (t.getAttribute('data-open')) open('ov-c-' + t.getAttribute('data-open'));
+    else if (t.getAttribute('data-story')) { var el = open('ov-s-' + t.getAttribute('data-story')); if (el && el.hasAttribute('data-auto')) play(el); }
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAll(); });
+})();`;
+let igCSSCache = null;
+async function igCSS() {
+  if (!igCSSCache) {
+    const t = await (await fetch('style.css', { cache: 'no-cache' })).text();
+    igCSSCache = t.slice(t.indexOf('/* ───────── 인스타그램 UI'));
+  }
+  return igCSSCache;
+}
+const igWrap = (inner, cls = '') => `<div style="${fsStyle()}" class="ig ${cls}" data-theme="${S.ui.theme}">${inner}</div>`;
+function postScreen(i, withBack, hidden) {
+  const top = withBack ? `<div class="v-top"><button data-back aria-label="뒤로">${I.back()}</button><div class="v-tt"><small>${esc(S.profile.username)}</small><b>게시물</b></div><span style="width:26px"></span></div>` : '';
+  return `<section class="v-scr" id="s-post-${i}"${hidden ? ' hidden' : ''}>${igWrap(statusBar() + top + postHTML(S.posts[i], { viewer: true, cid: i }))}</section>`;
+}
+function commentsOverlay(i, opened) {
+  return `<div class="v-ov" id="ov-c-${i}" data-closable${opened ? '' : ' hidden'}><div class="v-dim" data-close></div>${igWrap(sheetHTML(S.posts[i].comments, { viewer: true }), 'v-sheet')}</div>`;
+}
+// 스토리 사진 칸 위치는 실제로 그려 봐야 계산되므로 화면 밖에서 한 번 그린다
+async function storyMarkup(st, o) {
+  const box = document.createElement('div');
+  box.style.cssText = 'position:fixed;left:-10000px;top:0;width:360px';
+  box.innerHTML = storyHTML(st, Object.assign({ viewer: true }, o));
+  document.body.appendChild(box);
+  const imgs = [...box.querySelectorAll('.cell img')];
+  await Promise.all(imgs.map(im => (im.complete ? Promise.resolve() : new Promise(r => { im.onload = im.onerror = r; }))));
+  const cells = cellsOf(st);
+  box.querySelectorAll('.cell').forEach((el, i) => fitCellImg(el, cells[i]));
+  await new Promise(r => setTimeout(r, 0));
+  const html = box.innerHTML;
+  box.remove();
+  return html;
+}
+async function storyOverlay(i, { opened = false, auto = false, closable = true } = {}) {
+  return `<div class="v-ov v-st" id="ov-s-${i}"${closable ? ' data-closable' : ''}${auto ? ' data-auto' : ''}${opened ? '' : ' hidden'}>${await storyMarkup(S.stories[i], { noClose: !closable })}</div>`;
+}
+function htmlDoc(title, body, css) {
+  return `<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>${esc(title)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="${FONT_URL}">
+<style>
+${css}
+${VIEWER_CSS}
+</style>
+</head>
+<body class="v-${S.ui.theme}">
+${body}
+<script>
+${VIEWER_JS}
+<\/script>
+</body>
+</html>
+`;
+}
+function downloadText(name, text) {
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/html;charset=utf-8' }));
+  const a = Object.assign(document.createElement('a'), { href: url, download: name });
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+const fileSafe = t => String(t || 'instagram').replace(/[\\/:*?"<>|\s]+/g, '_');
+async function exportHTML(everything) {
+  const btn = everything ? $('#html-all') : $('#html-one');
+  const label = btn.textContent; btn.textContent = '만드는 중…'; btn.disabled = true;
+  try {
+    const css = await igCSS();
+    const u = S.profile.username, tab = S.ui.tab;
+    let body, name, title;
+    if (everything) {
+      const parts = [`<section class="v-scr" id="s-home">${accountHTML({ viewer: true })}</section>`];
+      S.posts.forEach((_, i) => { parts.push(postScreen(i, true, true)); parts.push(commentsOverlay(i, false)); });
+      for (let i = 0; i < S.stories.length; i++) parts.push(await storyOverlay(i, { auto: true }));
+      body = parts.join('\n'); name = `${fileSafe(u)}-instagram.html`; title = `${u} • Instagram`;
+    } else if (tab === 'post') {
+      body = postScreen(S.ui.postIdx, false, false) + commentsOverlay(S.ui.postIdx, false);
+      name = `${fileSafe(u)}-post-${S.ui.postIdx + 1}.html`; title = `${u} 게시물`;
+    } else if (tab === 'comments') {
+      body = S.comments.backdrop
+        ? postScreen(S.ui.postIdx, false, false) + commentsOverlay(S.ui.postIdx, true)
+        : `<section class="v-scr">${igWrap(sheetHTML(S.comments, { viewer: true }), 'cm-plain')}</section>`;
+      name = `${fileSafe(u)}-comments-${S.ui.postIdx + 1}.html`; title = `${u} 댓글`;
+    } else if (tab === 'story') {
+      body = await storyOverlay(S.ui.storyIdx, { opened: true, closable: false });
+      name = `${fileSafe(u)}-story-${S.ui.storyIdx + 1}.html`; title = `${u} 스토리`;
+    } else {
+      body = `<section class="v-scr" id="s-home">${accountHTML({ viewer: true })}</section>`;
+      name = `${fileSafe(u)}-profile.html`; title = `${u} • Instagram`;
+    }
+    downloadText(name, htmlDoc(title, body, css));
+    toast(`${name} 파일을 저장했어요.`);
+  } catch (err) {
+    console.error(err);
+    toast('HTML 파일을 만들지 못했어요. 다시 시도해 주세요.');
+  } finally {
+    btn.textContent = label; btn.disabled = false;
+  }
+}
+
+/* ───────── 임시저장 (이 브라우저에만) ───────── */
+const two = n => String(n).padStart(2, '0');
+const fmtTime = ts => { const d = new Date(ts); return `${d.getFullYear()}.${two(d.getMonth() + 1)}.${two(d.getDate())} ${two(d.getHours())}:${two(d.getMinutes())}`; };
+function firstImage(st) {
+  for (const p of st.posts || []) if (p.photos && p.photos[0]) return p.photos[0];
+  for (const x of st.stories || []) for (const c of x.cells || []) if (c && c.src) return c.src;
+  return (st.profile && st.profile.avatar) || null;
+}
+function makeThumb(src) {
+  return new Promise(res => {
+    if (!src) return res(null);
+    const img = new Image();
+    img.onload = () => {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 96;
+      const sc = Math.max(96 / img.width, 96 / img.height), w = img.width * sc, h = img.height * sc;
+      cv.getContext('2d').drawImage(img, (96 - w) / 2, (96 - h) / 2, w, h);
+      res(cv.toDataURL('image/jpeg', .8));
+    };
+    img.onerror = () => res(null);
+    img.src = src;
+  });
+}
+async function renderSlots() {
+  const list = $('#slot-list');
+  let slots = [];
+  try { slots = (await DB.slots()).sort((a, b) => b.time - a.time); } catch { list.innerHTML = '<p class="muted">이 브라우저에서는 임시저장을 쓸 수 없어요. (개인정보 보호 모드인지 확인해 주세요)</p>'; return; }
+  list.innerHTML = slots.length ? slots.map(x => `
+    <div class="slot">
+      ${x.thumb ? `<img src="${x.thumb}" alt="">` : '<span class="slot-ph"></span>'}
+      <div class="grow"><b>${esc(x.name)}</b><small>${fmtTime(x.time)} · 게시물 ${x.posts} · 스토리 ${x.stories}</small></div>
+      <button class="btn" data-slot-load="${x.id}">불러오기</button>
+      <button class="btn danger" data-slot-del="${x.id}">삭제</button>
+    </div>`).join('') : '<p class="muted">아직 저장한 작업이 없어요.</p>';
+}
+function openSlots() {
+  const d = new Date();
+  $('#slot-name').value = `${S.profile.username} ${d.getMonth() + 1}/${d.getDate()} ${two(d.getHours())}:${two(d.getMinutes())}`;
+  $('#slots-modal').hidden = false;
+  renderSlots();
+}
+async function saveSlot() {
+  const name = $('#slot-name').value.trim() || '이름 없는 저장';
+  try {
+    await DB.putSlot({ id: uid(), name, time: Date.now(), data: JSON.stringify(S), thumb: await makeThumb(firstImage(S)), posts: S.posts.length, stories: S.stories.length });
+    toast(`"${name}"(으)로 저장했어요.`);
+    renderSlots();
+  } catch (err) {
+    console.error(err);
+    toast('저장하지 못했어요. 브라우저 저장 공간이 부족할 수 있어요.');
+  }
+}
+async function loadSlot(id) {
+  try {
+    const x = await DB.getSlot(id);
+    if (!x) return;
+    S = hydrate(JSON.parse(x.data));
+    renderAll(); save();
+    $('#slots-modal').hidden = true;
+    toast(`"${x.name}"을(를) 불러왔어요.`);
+  } catch (err) { console.error(err); toast('불러오지 못했어요.'); }
+}
+async function delSlot(id) {
+  try { await DB.delSlot(id); renderSlots(); } catch { toast('삭제하지 못했어요.'); }
+}
+
 renderAll();
+loadSaved().then(saved => { if (saved) { S = hydrate(saved); renderAll(); } });
 document.fonts && document.fonts.ready.then(() => { if (S.ui.tab === 'story') layoutCells(); });
