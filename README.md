@@ -32,4 +32,3 @@
 - `app.js` – 상태, 미리보기 렌더링, 스토리 드래그/핀치, PNG 저장
 - `vendor/html-to-image.js` – DOM → PNG 변환 (MIT, v1.11.11)
 
-인스타그램과 관련 없는 비공식 목업 도구입니다.
