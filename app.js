@@ -73,9 +73,9 @@ function newComments() {
   return {
     backdrop: true, height: 'half',
     items: [
-      { id: uid(), avatar: null, username: 'zzunsiki_1', verified: false, time: '2시간', text: '신드롬을 사랑하자', likes: '12', liked: true, author: false, pinned: false, authorLiked: true, reply: false, more: 0 },
-      { id: uid(), avatar: null, username: '', verified: false, time: '1시간', text: '@zzunsiki_1 고마워 ❤️', likes: '3', liked: false, author: true, pinned: false, authorLiked: false, reply: true, more: 0 },
-      { id: uid(), avatar: null, username: 'zzunsiki_2', verified: false, time: '45분', text: '성유진을 아껴주자', likes: '', liked: false, author: false, pinned: false, authorLiked: false, reply: false, more: 2 },
+      { id: uid(), avatar: null, username: 'fan_1', verified: false, time: '2시간', text: '신드롬을 사랑하자', likes: '12', liked: true, author: false, pinned: false, authorLiked: true, reply: false, more: 0 },
+      { id: uid(), avatar: null, username: '', verified: false, time: '1시간', text: '@fan_1 고마워 ❤️', likes: '3', liked: false, author: true, pinned: false, authorLiked: false, reply: true, more: 0 },
+      { id: uid(), avatar: null, username: 'fan_2', verified: false, time: '45분', text: '성유진을 아껴주자', likes: '', liked: false, author: false, pinned: false, authorLiked: false, reply: false, more: 2 },
     ],
   };
 }
