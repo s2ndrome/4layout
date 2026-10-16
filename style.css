@@ -288,6 +288,9 @@ input[type=checkbox]:checked::after { transform: scale(1); }
 .grab { width: 40px; height: 4px; border-radius: 2px; background: var(--ig-sec); opacity: .5; margin: 8px auto 0; }
 .s-title { text-align: center; font-size: calc(16px * var(--fs, 1)); font-weight: 700; padding: 14px 0 12px; }
 .s-list { flex: 1; min-height: 0; overflow: hidden; padding: 4px 0 8px; }
+.s-off { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 220px; padding: 40px 24px 80px; text-align: center; }
+.s-off b { font-size: calc(16px * var(--fs, 1)); font-weight: 700; }
+.s-off span { font-size: calc(14px * var(--fs, 1)); color: var(--ig-sec); }
 .c { display: flex; gap: 12px; padding: 10px 16px 10px 16px; }
 .c.rp { padding-left: 60px; }
 .c .av { width: 34px; height: 34px; }

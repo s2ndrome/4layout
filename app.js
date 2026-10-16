@@ -83,7 +83,7 @@ function newPost() {
   return {
     photos: [], index: 0, ratio: '4/5', location: '', collab: '', follow: false,
     countStyle: 'inline', likes: '1,234', commentCount: '56', reposts: '8', shares: '21', likedBy: '',
-    liked: false, saved: false, showRepost: true,
+    liked: false, saved: false, showRepost: true, showShare: true, commentsOff: false,
     caption: '오늘의 기록 📷\n#일상 #daily', collapse: false, time: '3시간 전',
     comments: newComments(),
     crops: [], thumb: null,
@@ -256,9 +256,9 @@ function postHTML(p = S.post, o = {}) {
     <div class="p-act">
       <div class="p-act-l">
         ${act(I.heart(p.liked), p.likes)}
-        ${act(I.comment(), p.commentCount, openC)}
+        ${p.commentsOff ? '' : act(I.comment(), p.commentCount, openC)}
         ${p.showRepost ? act(I.repost(), p.reposts) : ''}
-        ${act(I.share(), p.shares)}
+        ${p.showShare === false ? '' : act(I.share(), p.shares)}
       </div>
       ${inline ? '' : dots}
       <span class="sp"></span>
@@ -267,7 +267,7 @@ function postHTML(p = S.post, o = {}) {
     <div class="p-body">
       ${likedBy}
       ${p.caption ? `<div class="p-cap"><b>${esc(pr.username)}</b>${V()} ${fmt(cap)}${more}</div>` : ''}
-      ${!inline && p.commentCount ? `<div class="sec"${openC}>댓글 ${esc(p.commentCount)}개 모두 보기</div>` : ''}
+      ${!inline && p.commentCount && !p.commentsOff ? `<div class="sec"${openC}>댓글 ${esc(p.commentCount)}개 모두 보기</div>` : ''}
       ${p.time ? `<div class="p-time sec">${esc(p.time)}</div>` : ''}
     </div>
   </article>`;
@@ -301,15 +301,15 @@ function sheetHTML(c, o = {}) {
   <div class="sheet">
     <div class="grab"${o.viewer ? ' data-close' : ''}></div>
     <div class="s-title">댓글</div>
-    <div class="s-list">${c.items.map(commentHTML).join('')}</div>
+    ${o.off ? `<div class="s-list s-off"><b>댓글 기능이 해제되었습니다.</b><span>이 게시물에는 댓글을 달 수 없어요.</span></div>` : `<div class="s-list">${c.items.map(commentHTML).join('')}</div>
     <div class="s-foot">
       <div class="s-emo">${QUICK_EMOJI.map(e => `<span>${e}</span>`).join('')}</div>
       <div class="s-in">${avatarImg(pr.avatar)}<div class="s-ph"><span>${esc(pr.username)}님에게 댓글 추가...</span></div></div>
-    </div>
+    </div>`}
   </div>`;
 }
 function renderComments() {
-  const c = S.comments, sheet = sheetHTML(c), t = S.ui.theme;
+  const c = S.comments, sheet = sheetHTML(c, { off: S.post.commentsOff }), t = S.ui.theme;
   $('#pv-comments').innerHTML = c.backdrop
     ? `<div style="${fsStyle()}" class="ig shot phone" data-theme="${t}"><div class="phone-bg">${statusBar()}${postHTML()}</div><div class="dim"></div><div class="sheet-wrap ${c.height}">${sheet}</div></div>`
     : `<div style="${fsStyle()}" class="ig shot cm-plain" data-theme="${t}">${sheet}</div>`;
@@ -1268,7 +1268,8 @@ function postScreen(i, withBack, hidden) {
   return `<section class="v-scr" id="s-post-${i}"${hidden ? ' hidden' : ''}>${igWrap(statusBar() + top + postHTML(S.posts[i], { viewer: true, cid: i }))}</section>`;
 }
 function commentsOverlay(i, opened) {
-  return `<div class="v-ov" id="ov-c-${i}" data-closable${opened ? '' : ' hidden'}><div class="v-dim" data-close></div>${igWrap(sheetHTML(S.posts[i].comments, { viewer: true }), 'v-sheet')}</div>`;
+  if (S.posts[i].commentsOff && !opened) return '';
+  return `<div class="v-ov" id="ov-c-${i}" data-closable${opened ? '' : ' hidden'}><div class="v-dim" data-close></div>${igWrap(sheetHTML(S.posts[i].comments, { viewer: true, off: S.posts[i].commentsOff }), 'v-sheet')}</div>`;
 }
 // 스토리 사진 칸 위치는 실제로 그려 봐야 계산되므로 화면 밖에서 한 번 그린다
 async function storyMarkup(st, o) {
@@ -1337,7 +1338,7 @@ async function exportHTML(everything) {
     } else if (tab === 'comments') {
       body = S.comments.backdrop
         ? postScreen(S.ui.postIdx, false, false) + commentsOverlay(S.ui.postIdx, true)
-        : `<section class="v-scr">${igWrap(sheetHTML(S.comments, { viewer: true }), 'cm-plain')}</section>`;
+        : `<section class="v-scr">${igWrap(sheetHTML(S.comments, { viewer: true, off: S.post.commentsOff }), 'cm-plain')}</section>`;
       name = `${fileSafe(u)}-comments-${S.ui.postIdx + 1}.html`; title = `${u} 댓글`;
     } else if (tab === 'story') {
       body = await storyOverlay(S.ui.storyIdx, { opened: true, closable: false });
