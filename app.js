@@ -973,13 +973,21 @@ document.addEventListener('click', e => {
   if (d.link) { openLink(d.link); return; }
   if (t.id === 'link-ok') { applyLink(); return; }
   if (t.id === 'export-btn') { exportCurrent(); return; }
-  if (t.id === 'html-one') { exportHTML(false); return; }
-  if (t.id === 'html-all') { exportHTML(true); return; }
+  if (t.id === 'html-one' || t.id === 'html-all') { openHtmlNotice(t.id === 'html-all'); return; }
+  if (t.id === 'html-go') { $('#html-modal').hidden = true; exportHTML(htmlAll); return; }
   if (t.id === 'slots-btn') { openSlots(); return; }
   if (t.id === 'slot-save') { saveSlot(); return; }
   if (d.slotLoad) { if (armed(t, '덮어쓰고 불러오기')) loadSlot(d.slotLoad); return; }
   if (d.slotDel) { if (armed(t, '한 번 더 누르면 삭제')) delSlot(d.slotDel); return; }
   if (t.id === 'clock-now') { const d = new Date(); S.ui.clock = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; syncForm(); renderPreview(); save(); return; }
+  if (t.id === 'reset-all-btn') {
+    if (!armed(t, '한 번 더 누르면 전부 초기화')) return;
+    const theme = S.ui.theme;
+    S = hydrate(null); S.ui.theme = theme;
+    renderAll(); save(); scrollTo({ top: 0 });
+    toast('모든 내용을 처음 상태로 되돌렸어요. 임시저장해 둔 작업은 그대로 있어요.');
+    return;
+  }
   if (t.id === 'reset-btn') {
     if (!armed(t, '한 번 더 누르면 초기화')) return;
     const tab = S.ui.tab;
@@ -1171,6 +1179,21 @@ async function applyLink() {
 }
 
 /* ───────── HTML 파일로 저장 ───────── */
+let htmlAll = false;
+// 파일로 올린 사진(파일 안에 통째로 들어가는 사진) 개수
+function countEmbedded() {
+  let n = 0;
+  JSON.stringify(S, (k, v) => { if (typeof v === 'string' && v.startsWith('data:image') && !v.startsWith('data:image/svg')) n++; return v; });
+  return n;
+}
+function openHtmlNotice(everything) {
+  htmlAll = everything;
+  const n = countEmbedded();
+  $('#html-embedded').textContent = n ? `지금 파일로 올린 사진이 ${n}장 있어요. 이 사진들은 HTML 파일 안에 그대로 들어가서 파일이 커져요.` : '';
+  $('#html-embedded').hidden = !n;
+  $('#html-modal').hidden = false;
+}
+
 const FONT_URL = 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Do+Hyeon&family=Black+Han+Sans&family=Nanum+Pen+Script&family=Nanum+Gothic+Coding:wght@400;700&family=Nanum+Myeongjo:wght@700;800&display=swap';
 const VIEWER_CSS = `
 html { -webkit-text-size-adjust: 100%; }

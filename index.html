@@ -255,7 +255,7 @@
     </div>
 
     <div class="box foot">
-      <button class="btn ghost" id="reset-btn">이 화면 초기화</button>
+      <div class="btn-row reset-row"><button class="btn ghost" id="reset-btn">이 화면 초기화</button><button class="btn ghost danger" id="reset-all-btn">전체 초기화</button></div>
       <p class="muted">입력한 내용은 이 브라우저에만 저장돼요. 인스타그램과는 관련 없는 비공식 목업 도구입니다.</p>
     </div>
   </aside>
@@ -287,6 +287,14 @@
     <p class="muted">사진을 길게 누르거나 오른쪽 클릭해서 "이미지 주소 복사"한 링크를 붙여 넣어 주세요. 구글 드라이브·드롭박스 공유 링크도 돼요(전체 공개일 때). 사진이 파일 안에 들어가지 않아서 임시저장과 HTML 파일이 훨씬 가벼워져요.</p>
     <p class="link-err" id="link-err" hidden></p>
     <div class="btn-row"><button class="primary" id="link-ok">넣기</button></div>
+  </div>
+</div>
+<div class="modal" id="html-modal" hidden>
+  <div class="modal-card">
+    <div class="modal-head"><b>HTML 파일로 저장</b><button data-close-modal aria-label="닫기">✕</button></div>
+    <p class="html-notice">html 파일로 저장 시에는 이미지 링크로 이미지를 넣어야 파일 크기가 커지지 않습니다. html 코드를 사용하려면 반드시 링크로 이미지 추가해 주세요!</p>
+    <p class="link-err" id="html-embedded" hidden></p>
+    <div class="btn-row"><button class="primary" id="html-go">저장하기</button><button class="btn" data-close-modal>취소</button></div>
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
