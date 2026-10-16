@@ -244,7 +244,7 @@ input[type=checkbox]:checked::after { transform: scale(1); }
 .ig .vf, .vf { display: inline-block; vertical-align: -2px; margin-left: 4px; }
 
 /* 상태 표시줄 */
-.sb { display: flex; justify-content: space-between; align-items: center; height: 47px; padding: 12px 26px 0 36px; font: 600 calc(16px * var(--fs, 1))/1 -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif; letter-spacing: -.01em; }
+.sb { display: flex; justify-content: space-between; align-items: center; height: 54px; padding: 6px 26px 20px 36px; font: 600 calc(16px * var(--fs, 1))/1 -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif; letter-spacing: -.01em; }
 .sb-r { display: flex; gap: 6px; align-items: center; }
 
 /* 게시물 */
