@@ -51,7 +51,9 @@ button { cursor: pointer; }
 .hero small { display: none; }
 .pv-bar { display: flex; gap: 10px; align-items: center; justify-content: space-between; width: 100%; max-width: 440px; }
 .pv-stage { display: flex; justify-content: center; width: 100%; }
-.pv-stage > .shot { border: 10px solid #fff; outline: 1.5px solid var(--line); box-sizing: content-box; }
+.pv-stage { padding: 12px 0; }
+/* 미리보기 액자는 그림자로만 그려서 PNG·HTML 저장에는 들어가지 않게 */
+.pv-stage > .shot { box-shadow: 0 0 0 10px #fff, 0 0 0 11.5px var(--line); }
 .pv-stage > .shot.story { border-radius: 0; }
 .pv-hint { margin: 0; max-width: 420px; font: 400 11.5px/1.5 var(--round); color: var(--mid); text-align: center; }
 
@@ -177,7 +179,7 @@ input[type=checkbox]:checked::after { transform: scale(1); }
   .work { grid-template-columns: 1fr; padding: 16px 16px 50px; gap: 24px; }
   .preview { position: static; }
   .hero { font-size: 16.5px; }
-  .pv-stage > .shot { border-width: 9px; }
+  .pv-stage > .shot { box-shadow: 0 0 0 8px #fff, 0 0 0 9.5px var(--line); }
 }
 
 /* 목록·HTML 저장·임시저장 */
