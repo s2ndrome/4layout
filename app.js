@@ -508,6 +508,12 @@ function dmChatHTML(i, o = {}) {
 function renderDM() {
   const d = S.dm;
   $('#pv-dm').innerHTML = d.view === 'chat' ? dmChatHTML(d.idx) : dmListHTML();
+  const body = $('#pv-dm .dc-body');
+  if (body) {
+    // 메시지가 적으면 위에서부터, 화면을 넘치면 최근 메시지(아래)가 보이게
+    const fit = () => body.classList.toggle('full', body.scrollHeight > body.clientHeight + 1);
+    fit(); body.querySelectorAll('img').forEach(im => { if (!im.complete) im.addEventListener('load', fit); });
+  }
 }
 
 /* ───────── 스토리 ───────── */
@@ -1479,8 +1485,7 @@ body.v-lock { overflow: hidden; }
 .v-tt b { font-size: 16px; font-weight: 700; }
 .a-nav, .dc-foot { position: sticky; bottom: 0; z-index: 2; }
 .feed .f-body { overflow: visible; }
-.dmc.phone .dc-body { overflow-y: auto; justify-content: flex-start; }
-.dmc.phone .dc-body > :first-child { margin-top: auto; }
+.dmc.phone .dc-body { overflow-y: auto; justify-content: flex-start !important; }
 .dm-top [data-back], .dc-top [data-back] { cursor: pointer; display: flex; }
 [data-go], [data-open], [data-story], [data-car], [data-close] { cursor: pointer; }
 .v-ov { position: fixed; inset: 0; z-index: 20; }
