@@ -38,6 +38,14 @@ const I = {
   grid: (s = 24) => svg(stroke('M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18', 1.8), s),
   reels: (s = 24) => svg(stroke('M2.5 7.5h19M8.5 2.5l3 5M14.5 2.5l3 5M6.5 2.5h11a4 4 0 0 1 4 4v11a4 4 0 0 1-4 4h-11a4 4 0 0 1-4-4v-11a4 4 0 0 1 4-4z') + '<path d="M10 11.3v6.2l5-3.1z" fill="currentColor"/>', s),
   tagged: (s = 24) => svg(stroke('M10.2 18.3 12 21l1.8-2.7H19a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v11.3a2 2 0 0 0 2 2zM12 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM7.5 15c.7-1.9 2.4-3 4.5-3s3.8 1.1 4.5 3'), s),
+  homeFill: (s = 26) => svg('<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6.5H9V21H4a1 1 0 0 1-1-1z" fill="currentColor"/>', s),
+  edit: (s = 24) => svg(stroke('M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z'), s),
+  camera: (s = 24) => svg(stroke('M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'), s),
+  phone: (s = 24) => svg(stroke('M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z'), s),
+  video: (s = 24) => svg(stroke('M3 7a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM16 10l5-3v10l-5-3'), s),
+  mic: (s = 24) => svg(stroke('M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3'), s),
+  gallery: (s = 24) => svg(stroke('M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 16l5-5 4 4 3-3 6 6'), s),
+  sticker: (s = 24) => svg(stroke('M21 12a9 9 0 1 1-9-9h4l5 5zM16 3v5h5M8.5 14.5a4 4 0 0 0 7 0'), s),
   home: (s = 26) => svg(stroke('M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6.5H9V21H4a1 1 0 0 1-1-1z'), s),
   search: (s = 26) => svg(stroke('M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15zM16 16l5.5 5.5'), s),
   pin: (s = 24) => svg('<path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z" fill="currentColor"/><circle cx="12" cy="10" r="2.6" fill="#fff"/>', s),
@@ -87,15 +95,37 @@ function newPost() {
     caption: '오늘의 기록 📷\n#일상 #daily', collapse: false, time: '3시간 전',
     comments: newComments(),
     crops: [], thumb: null,
+    friend: false, owner: newOwner(), inFeed: true,
   };
 }
+function newOwner(n = 1) { return { username: 'friend_' + n, avatar: null, verified: false }; }
 function newStory() {
   return {
     layout: '4', cells: [], sel: 0, gap: 0.5, gapColor: '#ffffff',
     bg: 'linear-gradient(160deg,#833ab4,#fd1d1d 55%,#fcb045)',
     stickers: [], selSticker: null,
     showTop: true, count: 3, current: 1, progress: 40, time: '3시간', bottom: 'reply',
+    friend: false, owner: newOwner(), seen: false,
   };
+}
+function newFeed() { return { logo: 'Instagram', heartDot: true, dmBadge: '2', myStory: 0 }; }
+function newMsg(from, text = '') { return { id: uid(), from, text, img: null, react: '' }; }
+function newThread(n = 1) {
+  return {
+    id: uid(), username: 'friend_' + n, name: '', avatar: null, verified: false, online: false,
+    active: '1시간 전 활동', time: '1시간', unread: false, preview: '', seen: '읽음', intro: true,
+    messages: [newMsg('time', '오늘 오후 2:10'), newMsg('them', '안녕!'), newMsg('me', '안녕 ㅎㅎ')],
+  };
+}
+function newDM() {
+  const a = newThread(1), b = newThread(2);
+  Object.assign(a, { username: 'fan_1', name: '팬1', online: true, active: '현재 활동 중', time: '1시간', unread: true,
+    messages: [newMsg('time', '오늘 오후 2:10'), newMsg('them', '뭐해??'), newMsg('them', '사진 봤어 ㅋㅋ'), newMsg('me', '방금 일어남'), Object.assign(newMsg('me', '왜?'), { react: '❤️' }), newMsg('them', '그냥 ㅎㅎ 보고 싶어서')] });
+  Object.assign(b, { username: 'fan_2', name: '', active: '3시간 전 활동', time: '3시간', messages: [newMsg('time', '어제 오후 9:30'), newMsg('them', '내일 봐!'), newMsg('me', '응 내일 봐 👋')] });
+  return { view: 'list', idx: 0, c1: '#a033ff', c2: '#0a7cff', threads: [a, b] };
+}
+function friendStory() {
+  return Object.assign(newStory(), { friend: true, owner: { username: 'fan_1', avatar: null, verified: false }, layout: '1', bg: 'linear-gradient(160deg,#4f5bd5,#962fbf 50%,#d62976)', time: '2시간' });
 }
 function newAccount() {
   return {
@@ -110,8 +140,10 @@ function defaults() {
     ui: { tab: 'post', theme: 'light', status: true, clock: '9:41', sbIcons: true, battery: 100, fontScale: 1, postIdx: 0, storyIdx: 0 },
     profile: { username: 'your.id', name: '이름', avatar: null, verified: false, ring: false },
     posts: [newPost()],
-    stories: [newStory()],
+    stories: [newStory(), friendStory()],
     account: newAccount(),
+    feed: newFeed(),
+    dm: newDM(),
   };
 }
 // S.post / S.comments / S.story 는 지금 고른 게시물·스토리를 가리킨다 (저장할 때는 빠짐)
@@ -126,11 +158,16 @@ function attach(st) {
 function hydrate(saved) {
   const d = defaults();
   if (!saved || typeof saved !== 'object') return attach(d);
-  for (const k of ['ui', 'profile', 'account']) if (saved[k] && typeof saved[k] === 'object') d[k] = Object.assign(d[k], saved[k]);
+  for (const k of ['ui', 'profile', 'account', 'feed', 'dm']) if (saved[k] && typeof saved[k] === 'object') d[k] = Object.assign(d[k], saved[k]);
   if (Array.isArray(saved.posts) && saved.posts.length) d.posts = saved.posts.map(x => Object.assign(newPost(), x, { comments: Object.assign(newComments(), x.comments) }));
   else if (saved.post) d.posts = [Object.assign(newPost(), saved.post, { comments: Object.assign(newComments(), saved.comments) })];
   if (Array.isArray(saved.stories) && saved.stories.length) d.stories = saved.stories.map(x => Object.assign(newStory(), x));
   else if (saved.story) d.stories = [Object.assign(newStory(), saved.story)];
+  d.posts.forEach(x => { x.owner = Object.assign(newOwner(), x.owner); });
+  d.stories.forEach(x => { x.owner = Object.assign(newOwner(), x.owner); });
+  d.dm.threads = (d.dm.threads || []).map(t => Object.assign(newThread(), t, { messages: (t.messages || []).map(m => Object.assign(newMsg('me'), m)) }));
+  if (!d.dm.threads.length) d.dm.threads = newDM().threads;
+  d.dm.idx = clamp(+d.dm.idx || 0, 0, d.dm.threads.length - 1);
   d.stories.forEach(x => { if (x.showUI === false) { x.showTop = false; x.bottom = 'none'; } delete x.showUI; });
   d.account.highlights.forEach(h => { if (h.story == null) h.story = -1; });
   d.ui.postIdx = clamp(+d.ui.postIdx || 0, 0, d.posts.length - 1);
@@ -211,10 +248,14 @@ function avatarImg(src, cls = 'av', ring = false) {
   return ring ? `<span class="ring">${img}</span>` : img;
 }
 const V = () => (S.profile.verified ? verified(14) : '');
+// 게시물·스토리의 작성자: 친구 것으로 설정하면 그 계정, 아니면 내 계정
+function ownerOf(x) {
+  return x && x.friend && x.owner ? { username: x.owner.username || 'friend', avatar: x.owner.avatar, verified: !!x.owner.verified, ring: false } : S.profile;
+}
 
 /* ───────── 게시물 ───────── */
 function postHTML(p = S.post, o = {}) {
-  const pr = S.profile;
+  const pr = ownerOf(p), vf = pr.verified ? verified(14) : '';
   const photos = p.photos.length ? p.photos : [null];
   const idx = clamp(p.index, 0, photos.length - 1);
   const cur = photos[idx];
@@ -223,7 +264,7 @@ function postHTML(p = S.post, o = {}) {
   const act = (icon, n, attr = '') => `<span class="a"${attr}>${icon}${inline && n ? `<span>${esc(n)}</span>` : ''}</span>`;
   const openC = o.viewer ? ` data-open="${o.cid}"` : '';
   const dots = photos.length > 1 ? `<div class="p-dots${inline ? ' row' : ''}">${photos.slice(0, 5).map((_, i) => `<i class="${i === Math.min(idx, 4) ? 'on' : ''}"></i>`).join('')}</div>` : '';
-  const user = `<span class="t">${esc(pr.username)}</span>${V()}${p.collab ? `<span class="t">&nbsp;및&nbsp;${esc(p.collab)}</span>` : ''}`;
+  const user = `<span class="t">${esc(pr.username)}</span>${vf}${p.collab ? `<span class="t">&nbsp;및&nbsp;${esc(p.collab)}</span>` : ''}`;
 
   let cap = p.caption;
   let more = '';
@@ -266,7 +307,7 @@ function postHTML(p = S.post, o = {}) {
     </div>
     <div class="p-body">
       ${likedBy}
-      ${p.caption ? `<div class="p-cap"><b>${esc(pr.username)}</b>${V()} ${fmt(cap)}${more}</div>` : ''}
+      ${p.caption ? `<div class="p-cap"><b>${esc(pr.username)}</b>${vf} ${fmt(cap)}${more}</div>` : ''}
       ${!inline && p.commentCount && !p.commentsOff ? `<div class="sec"${openC}>댓글 ${esc(p.commentCount)}개 모두 보기</div>` : ''}
       ${p.time ? `<div class="p-time sec">${esc(p.time)}</div>` : ''}
     </div>
@@ -278,8 +319,7 @@ function renderPost() {
 
 /* ───────── 댓글 ───────── */
 const QUICK_EMOJI = ['❤️', '🙌', '🔥', '👏', '😢', '😍', '😮', '😂'];
-function commentHTML(m) {
-  const pr = S.profile;
+function commentHTML(m, pr = S.profile) {
   const u = m.author ? pr.username : m.username;
   const av = m.author ? pr.avatar : m.avatar;
   const v = m.author ? pr.verified : m.verified;
@@ -296,20 +336,20 @@ function commentHTML(m) {
   </div>`;
 }
 function sheetHTML(c, o = {}) {
-  const pr = S.profile;
+  const pr = S.profile, ow = o.owner || S.profile;
   return `
   <div class="sheet">
     <div class="grab"${o.viewer ? ' data-close' : ''}></div>
     <div class="s-title">댓글</div>
-    ${o.off ? `<div class="s-list s-off"><b>댓글 기능이 해제되었습니다.</b><span>이 게시물에는 댓글을 달 수 없어요.</span></div>` : `<div class="s-list">${c.items.map(commentHTML).join('')}</div>
+    ${o.off ? `<div class="s-list s-off"><b>댓글 기능이 해제되었습니다.</b><span>이 게시물에는 댓글을 달 수 없어요.</span></div>` : `<div class="s-list">${c.items.map(m => commentHTML(m, ow)).join('')}</div>
     <div class="s-foot">
       <div class="s-emo">${QUICK_EMOJI.map(e => `<span>${e}</span>`).join('')}</div>
-      <div class="s-in">${avatarImg(pr.avatar)}<div class="s-ph"><span>${esc(pr.username)}님에게 댓글 추가...</span></div></div>
+      <div class="s-in">${avatarImg(pr.avatar)}<div class="s-ph"><span>${esc(ow.username)}님에게 댓글 추가...</span></div></div>
     </div>`}
   </div>`;
 }
 function renderComments() {
-  const c = S.comments, sheet = sheetHTML(c, { off: S.post.commentsOff }), t = S.ui.theme;
+  const c = S.comments, sheet = sheetHTML(c, { off: S.post.commentsOff, owner: ownerOf(S.post) }), t = S.ui.theme;
   $('#pv-comments').innerHTML = c.backdrop
     ? `<div style="${fsStyle()}" class="ig shot phone" data-theme="${t}"><div class="phone-bg">${statusBar()}${postHTML()}</div><div class="dim"></div><div class="sheet-wrap ${c.height}">${sheet}</div></div>`
     : `<div style="${fsStyle()}" class="ig shot cm-plain" data-theme="${t}">${sheet}</div>`;
@@ -329,14 +369,14 @@ function accountHTML(o = {}) {
     return `<div class="hl"${link}><div class="hl-c">${cover ? `<img src="${cover}" alt="">` : '<div></div>'}</div><span>${esc(h.title)}</span></div>`;
   }).join('')
     + (own ? `<div class="hl"><div class="hl-c"><div class="hl-new">${I.plus(26)}</div></div><span>신규</span></div>` : '');
-  let cells = S.posts.map((p, i) => `<div ${o.viewer ? `data-go="s-post-${i}"` : `data-go-post="${i}"`}>${p.photos[0] ? `<img src="${p.photos[0]}" alt="" style="${cropCSS(p.thumb)}">` : ''}${p.photos.length > 1 ? `<span class="g-multi">${I.multi}</span>` : ''}</div>`)
-    .concat(a.grid.map(src => `<div><img src="${src}" alt=""></div>`));
-  if (!S.posts.some(p => p.photos.length) && !a.grid.length) while (cells.length < a.placeholders) cells.push('<div></div>');
+  let cells = S.posts.map((p, i) => p.friend ? '' : `<div ${o.viewer ? `data-go="s-post-${i}"` : `data-go-post="${i}"`}>${p.photos[0] ? `<img src="${p.photos[0]}" alt="" style="${cropCSS(p.thumb)}">` : ''}${p.photos.length > 1 ? `<span class="g-multi">${I.multi}</span>` : ''}</div>`)
+    .filter(Boolean).concat(a.grid.map(src => `<div><img src="${src}" alt=""></div>`));
+  if (!S.posts.some(p => !p.friend && p.photos.length) && !a.grid.length) while (cells.length < a.placeholders) cells.push('<div></div>');
   cells = cells.join('');
   const btns = own
     ? '<div>프로필 편집</div><div>프로필 공유</div>'
     : '<div class="blue">팔로우</div><div>메시지</div>';
-  const nav = a.nav ? `<div class="a-nav">${I.home()}${I.reels(26)}${I.share(26)}${I.search()}${avatarImg(pr.avatar)}</div>` : '';
+  const nav = a.nav ? navHTML('account', o.viewer) : '';
   return `
   <div style="${fsStyle()}" class="ig shot acct${a.nav && !o.viewer ? ' phone' : ''}" data-theme="${S.ui.theme}">
     ${statusBar()}
@@ -370,6 +410,105 @@ function accountHTML(o = {}) {
   </div>`;
 }
 function renderAccount() { $('#pv-account').innerHTML = accountHTML(); }
+
+/* ───────── 하단 탭 바 ───────── */
+function navHTML(active, viewer) {
+  const go = id => (viewer ? ` data-go="${id}"` : '');
+  return `<div class="a-nav"><span${go('s-feed')}>${active === 'feed' ? I.homeFill() : I.home()}</span>${I.reels(26)}<span${go('s-dms')}>${I.share(26)}</span>${I.search()}<span${go('s-account')}>${avatarImg(S.profile.avatar)}</span></div>`;
+}
+
+/* ───────── 홈 피드 ───────── */
+function myStoryIdx() {
+  const i = +S.feed.myStory;
+  return i >= 0 && S.stories[i] && !S.stories[i].friend ? i : -1;
+}
+function feedHTML(o = {}) {
+  const pr = S.profile, f = S.feed, my = myStoryIdx();
+  const link = i => (o.viewer ? ` data-story="${i}"` : ` data-go-story="${i}"`);
+  const tray = [`<div class="ft"${my >= 0 ? link(my) : ''}><div class="ft-c ${my >= 0 ? (S.stories[my].seen ? 'seen' : 'new') : 'none'}">${avatarImg(pr.avatar)}${my < 0 ? `<span class="ft-plus">${I.plus(12)}</span>` : ''}</div><span>내 스토리</span></div>`]
+    .concat(S.stories.map((st, i) => (st.friend ? `<div class="ft"${link(i)}><div class="ft-c ${st.seen ? 'seen' : 'new'}">${avatarImg(st.owner.avatar)}</div><span>${esc(st.owner.username)}</span></div>` : '')).filter(Boolean)).join('');
+  const posts = S.posts.map((p, i) => (p.inFeed === false ? '' : postHTML(p, o.viewer ? { viewer: true, cid: i } : {}))).filter(Boolean).join('');
+  const dmAttr = o.viewer ? ' data-go="s-dms"' : ' data-go-dmlist';
+  return `<div style="${fsStyle()}" class="ig shot feed${o.viewer ? '' : ' phone'}" data-theme="${S.ui.theme}">
+    ${statusBar()}
+    <div class="f-top"><span class="f-logo">${esc(f.logo)}</span>${I.chev(12)}<span class="sp"></span>
+      <span class="f-ic">${I.heartHL(26)}${f.heartDot ? '<i class="f-dot"></i>' : ''}</span>
+      <span class="f-ic"${dmAttr}>${I.share(26)}${f.dmBadge ? `<b class="f-badge">${esc(f.dmBadge)}</b>` : ''}</span></div>
+    <div class="f-body">
+      <div class="f-tray">${tray}</div>
+      <div class="f-posts">${posts || '<p class="f-empty">피드에 보이는 게시물이 없어요.</p>'}</div>
+    </div>
+    ${navHTML('feed', o.viewer)}
+  </div>`;
+}
+function renderFeed() { $('#pv-feed').innerHTML = feedHTML(); }
+
+/* ───────── DM ───────── */
+function hexMix(a, b, t) {
+  const x = hexToRgb(a), y = hexToRgb(b);
+  return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('');
+}
+function threadTitle(t) { return t.name || t.username; }
+function threadPreview(t) {
+  if (t.preview) return t.preview;
+  const last = [...t.messages].reverse().find(m => m.from !== 'time');
+  if (!last) return '';
+  if (last.img && !last.text) return last.from === 'me' ? '회원님이 사진을 보냈습니다' : '사진을 보냈습니다';
+  return (last.from === 'me' ? '회원님: ' : '') + last.text;
+}
+function dmAvatar(t, size) {
+  return `<span class="dm-av" style="width:${size}px;height:${size}px">${avatarImg(t.avatar)}${t.online ? '<i class="dm-on"></i>' : ''}</span>`;
+}
+function dmListHTML(o = {}) {
+  const d = S.dm;
+  const rows = d.threads.map((t, i) => `
+    <div class="dm-row${t.unread ? ' unread' : ''}"${o.viewer ? ` data-go="s-dm-${i}"` : ` data-go-dm="${i}"`}>
+      ${dmAvatar(t, 56)}
+      <div class="dm-tx">
+        <div class="dm-n"><span class="t">${esc(threadTitle(t))}</span>${t.verified ? verified(12) : ''}</div>
+        <div class="dm-p"><span class="t">${esc(threadPreview(t))}</span>${t.time ? `<span class="tm">&nbsp;· ${esc(t.time)}</span>` : ''}</div>
+      </div>
+      ${t.unread ? '<i class="dm-dot"></i>' : `<span class="dm-cam">${I.camera(24)}</span>`}
+    </div>`).join('');
+  return `<div style="${fsStyle()}" class="ig shot dml${o.viewer ? '' : ' phone'}" data-theme="${S.ui.theme}">
+    ${statusBar()}
+    <div class="dm-top"><span${o.viewer ? ' data-back' : ''}>${I.back()}</span><div class="dm-me"><span class="t">${esc(S.profile.username)}</span>${I.chev(12)}</div><span class="sp"></span>${I.edit(24)}</div>
+    <div class="dm-search">${I.search(16)}<span>검색</span></div>
+    <div class="dm-sec"><b>메시지</b><span>요청</span></div>
+    <div class="dm-rows">${rows}</div>
+  </div>`;
+}
+function dmChatHTML(i, o = {}) {
+  const d = S.dm, t = d.threads[i] || d.threads[0];
+  const msgs = t.messages, mine = msgs.filter(m => m.from === 'me').length;
+  let k = 0;
+  const lastReal = [...msgs].reverse().find(m => m.from !== 'time');
+  const body = msgs.map((m, j) => {
+    if (m.from === 'time') return `<div class="dc-time">${esc(m.text)}</div>`;
+    const prev = msgs[j - 1], next = msgs[j + 1];
+    const first = !prev || prev.from !== m.from, last = !next || next.from !== m.from;
+    let style = '';
+    if (m.from === 'me') { const c = hexMix(d.c1, d.c2, mine > 1 ? k++ / (mine - 1) : 1); style = ` style="background:${c};color:${contrast(c)}"`; }
+    const content = m.img
+      ? `<img class="dc-img" src="${m.img}" alt="">${m.text ? `<div class="dc-b"${style}>${fmt(m.text)}</div>` : ''}`
+      : `<div class="dc-b"${style}>${fmt(m.text)}</div>`;
+    return `<div class="dc-m ${m.from}${first ? ' first' : ''}${last ? ' last' : ''}${m.react ? ' has-react' : ''}">
+      ${m.from === 'them' ? `<span class="dc-sav">${last ? avatarImg(t.avatar) : ''}</span>` : ''}
+      <div class="dc-c">${content}${m.react ? `<span class="dc-react">${esc(m.react)}</span>` : ''}</div>
+    </div>`;
+  }).join('');
+  const intro = t.intro ? `<div class="dc-intro">${avatarImg(t.avatar)}<b>${esc(threadTitle(t))}${t.verified ? verified(14) : ''}</b><span>${esc(t.username)} · Instagram</span><span class="dc-pbtn">프로필 보기</span></div>` : '';
+  return `<div style="${fsStyle()}" class="ig shot dmc phone" data-theme="${S.ui.theme}">
+    ${statusBar()}
+    <div class="dc-top"><span${o.viewer ? ' data-back' : ''}>${I.back()}</span>${dmAvatar(t, 34)}<div class="dc-t"><b><span class="t">${esc(threadTitle(t))}</span>${t.verified ? verified(12) : ''}</b>${t.active ? `<small>${esc(t.active)}</small>` : ''}</div><span class="sp"></span>${I.phone(24)}${I.video(26)}</div>
+    <div class="dc-body">${intro}${body}${lastReal && lastReal.from === 'me' && t.seen ? `<div class="dc-seen">${esc(t.seen)}</div>` : ''}</div>
+    <div class="dc-foot"><div class="dc-in"><span class="dc-cam">${I.camera(20)}</span><span class="ph">메시지 보내기...</span>${I.mic(22)}${I.gallery(22)}${I.sticker(22)}</div></div>
+  </div>`;
+}
+function renderDM() {
+  const d = S.dm;
+  $('#pv-dm').innerHTML = d.view === 'chat' ? dmChatHTML(d.idx) : dmListHTML();
+}
 
 /* ───────── 스토리 ───────── */
 const LAYOUTS = {
@@ -431,7 +570,7 @@ function stickerInner(k) {
 function stickerTransform(k) { return `translate(-50%,-50%) rotate(${k.rot}deg) scale(${k.scale})`; }
 
 function storyHTML(s, o = {}) {
-  const pr = S.profile, L = LAYOUTS[s.layout], ed = !o.viewer;
+  const pr = ownerOf(s), L = LAYOUTS[s.layout], ed = !o.viewer;
   const cells = cellsOf(s);
   const grid = `<div class="st-grid" style="grid-template-columns:${L.cols};grid-template-rows:${L.rows};gap:${s.gap}cqw;${s.gap ? `background:${s.gapColor}` : ''}">
     ${cells.map((c, i) => `<div class="cell${ed && i === s.sel && L.n > 1 ? ' sel' : ''}" data-cell="${i}"${!c.src && s.gap ? ` style="background:${s.bg}"` : ''}>${c.src ? `<img src="${c.src}" alt="">` : ed ? `<div class="cell-empty">${I.plus(28)}<span>사진 추가</span></div>` : ''}</div>`).join('')}
@@ -589,7 +728,7 @@ function thumbsHTML(arr, path, curIdx) {
 function listBarHTML(kind) {
   const arr = kind === 'post' ? S.posts : S.stories, cur = kind === 'post' ? S.ui.postIdx : S.ui.storyIdx;
   const name = kind === 'post' ? '게시물' : '스토리';
-  return `<div class="chips">${arr.map((_, i) => `<button data-pick-${kind}="${i}" class="${i === cur ? 'on' : ''}">${name} ${i + 1}</button>`).join('')}<button data-new-${kind}>+ 새 ${name}</button></div>
+  return `<div class="chips">${arr.map((x, i) => `<button data-pick-${kind}="${i}" class="${i === cur ? 'on' : ''}">${name} ${i + 1}${x.friend ? ` · ${esc(x.owner.username)}` : ''}</button>`).join('')}<button data-new-${kind}>+ 새 ${name}</button></div>
     <div class="btn-row">${arr.length > 1 ? `<button class="btn" data-mv-${kind}="-1"${cur === 0 ? ' disabled' : ''}>◀ 앞으로</button><button class="btn" data-mv-${kind}="1"${cur === arr.length - 1 ? ' disabled' : ''}>뒤로 ▶</button>` : ''}<button class="btn" data-dup-${kind}>${name} ${cur + 1} 복제</button>${arr.length > 1 ? `<button class="btn danger" data-del-${kind}>${name} ${cur + 1} 삭제</button>` : ''}</div>`;
 }
 function renderLists() {
@@ -703,8 +842,8 @@ function renderCommentEditor() {
   $('#cm-editor').innerHTML = items.map((m, i) => `
   <div class="item">
     <div class="item-head">
-      ${m.author ? `<img src="${avatarOf(S.profile.avatar)}" alt="" title="작성자는 계정 정보의 사진을 사용해요">` : `<label title="프로필 사진 변경"><img src="${avatarOf(m.avatar)}" alt=""><input type="file" accept="image/*" data-img="comments.items.${i}.avatar"></label><button data-link="img:comments.items.${i}.avatar" title="링크로 프로필 사진 넣기" aria-label="링크로 프로필 사진 넣기">🔗</button>`}
-      <div class="grow">${esc(m.author ? S.profile.username + ' (작성자)' : m.username || '댓글 ' + (i + 1))}</div>
+      ${m.author ? `<img src="${avatarOf(ownerOf(S.post).avatar)}" alt="" title="작성자는 게시물 작성자의 사진을 사용해요">` : `<label title="프로필 사진 변경"><img src="${avatarOf(m.avatar)}" alt=""><input type="file" accept="image/*" data-img="comments.items.${i}.avatar"></label><button data-link="img:comments.items.${i}.avatar" title="링크로 프로필 사진 넣기" aria-label="링크로 프로필 사진 넣기">🔗</button>`}
+      <div class="grow">${esc(m.author ? ownerOf(S.post).username + ' (작성자)' : m.username || '댓글 ' + (i + 1))}</div>
       <button data-cm-mv="${i}" data-d="-1" aria-label="위로">↑</button>
       <button data-cm-mv="${i}" data-d="1" aria-label="아래로">↓</button>
       <button data-cm-del="${i}" aria-label="삭제">✕</button>
@@ -724,6 +863,87 @@ function renderCommentEditor() {
   </div>`).join('');
   syncForm($('#cm-editor'));
 }
+function ownerEditorHTML(kind) {
+  const x = kind === 'post' ? S.post : S.story, p = `${kind}.owner`;
+  if (!x.friend) return '<p class="muted">내 계정(위 계정 정보)으로 보여요.</p>';
+  return `<div class="item"><div class="item-head">
+      <label title="프로필 사진"><img src="${avatarOf(x.owner.avatar)}" alt=""><input type="file" accept="image/*" data-img="${p}.avatar"></label>
+      <button data-link="img:${p}.avatar" title="링크로 프로필 사진 넣기" aria-label="링크로 프로필 사진 넣기">🔗</button>
+      <div class="grow"><label class="f" style="margin:0">친구 아이디<input type="text" data-k="${p}.username" spellcheck="false" autocomplete="off"></label></div>
+    </div>
+    <div class="checks"><label><input type="checkbox" data-k="${p}.verified"> 인증 배지</label></div></div>`;
+}
+function renderOwnerEditors() {
+  const a = $('#post-owner'), b = $('#story-owner');
+  if (a) { a.innerHTML = ownerEditorHTML('post'); syncForm(a); }
+  if (b) { b.innerHTML = ownerEditorHTML('story'); syncForm(b); }
+}
+function renderFeedEditor() {
+  const my = myStoryIdx();
+  const mine = S.stories.map((x, i) => (x.friend ? '' : `<option value="${i}">스토리 ${i + 1}</option>`)).join('');
+  const friends = S.stories.map((x, i) => (x.friend ? `
+    <div class="item"><div class="item-head"><img src="${avatarOf(x.owner.avatar)}" alt=""><div class="grow">${esc(x.owner.username)} <small class="muted">스토리 ${i + 1}</small></div></div>
+      <div class="checks"><label><input type="checkbox" data-k="stories.${i}.seen"> 이미 본 스토리 (회색 테두리)</label></div>
+      <div class="btn-row"><button class="btn" data-edit-story="${i}">꾸미기 · 아이디 바꾸기</button><button class="btn danger" data-del-story-at="${i}">삭제</button></div></div>` : '')).join('');
+  $('#feed-stories').innerHTML = `
+    <label class="f">내 스토리<select data-k="feed.myStory" data-num><option value="-1">없음 (＋ 표시)</option>${mine}</select></label>
+    ${my >= 0 ? `<div class="checks"><label><input type="checkbox" data-k="stories.${my}.seen"> 이미 본 스토리 (회색 테두리)</label></div>` : ''}
+    <div class="btn-row">${my >= 0 ? `<button class="btn" data-edit-story="${my}">내 스토리 꾸미기</button>` : ''}<button class="btn" data-feed-new="my-story">+ 내 스토리 새로 만들기</button></div>
+    <h4 class="sub-h">친구 스토리</h4>
+    ${friends || '<p class="muted">아직 친구 스토리가 없어요.</p>'}
+    <button class="btn" data-feed-new="friend-story">+ 친구 스토리 추가</button>`;
+  $('#feed-posts').innerHTML = S.posts.map((x, i) => `
+    <div class="item"><div class="item-head">${x.photos[0] ? `<img class="sq" src="${x.photos[0]}" alt="">` : '<span class="sq"></span>'}<div class="grow">게시물 ${i + 1} · ${esc(ownerOf(x).username)} <small class="muted">${x.friend ? '친구' : '내 게시물'}</small></div></div>
+      <div class="checks"><label><input type="checkbox" data-k="posts.${i}.inFeed"> 피드에 보이기</label></div>
+      <div class="btn-row"><button class="btn" data-edit-post="${i}">편집</button></div></div>`).join('')
+    + `<div class="btn-row"><button class="btn" data-feed-new="friend-post">+ 친구 게시물 만들기</button><button class="btn" data-feed-new="my-post">+ 내 게시물 만들기</button></div>`;
+  syncForm($('#feed-stories')); syncForm($('#feed-posts'));
+}
+const DM_COLORS = [['#a033ff', '#0a7cff', '보라·파랑'], ['#3797f0', '#3797f0', '파랑'], ['#ff5ea8', '#ff2d6f', '핑크'], ['#34c759', '#20a446', '초록'], ['#c0d1dc', '#9fb8c9', '하늘'], ['#262626', '#262626', '검정']];
+function renderDMEditor() {
+  const d = S.dm, t = d.threads[d.idx], p = `dm.threads.${d.idx}`;
+  $$('[data-dm-view]').forEach(b => b.classList.toggle('on', b.dataset.dmView === d.view));
+  $('#dm-colors').innerHTML = `<div class="swatches">${DM_COLORS.map(([a, b, n]) => `<button data-dm-color="${a},${b}" title="${n}" aria-label="${n}" class="${d.c1 === a && d.c2 === b ? 'on' : ''}" style="background:linear-gradient(180deg,${a},${b})"></button>`).join('')}</div>
+    <div class="grid2"><label class="f">위쪽(오래된 메시지) 색<input type="color" data-k="dm.c1"></label><label class="f">아래쪽(최근 메시지) 색<input type="color" data-k="dm.c2"></label></div>
+    <p class="muted">두 색을 같게 하면 단색이 돼요.</p>`;
+  $('#dm-threads').innerHTML = `<div class="chips">${d.threads.map((x, i) => `<button data-pick-dm="${i}" class="${i === d.idx ? 'on' : ''}">${esc(threadTitle(x))}</button>`).join('')}<button data-dm-new>+ 새 대화방</button></div>
+    <div class="btn-row"><button class="btn" data-dm-mv="-1"${d.idx === 0 ? ' disabled' : ''}>▲ 위로</button><button class="btn" data-dm-mv="1"${d.idx === d.threads.length - 1 ? ' disabled' : ''}>▼ 아래로</button>${d.threads.length > 1 ? '<button class="btn danger" data-dm-del>이 대화방 삭제</button>' : ''}</div>
+    <div class="item"><div class="item-head">
+      <label title="프로필 사진"><img src="${avatarOf(t.avatar)}" alt=""><input type="file" accept="image/*" data-img="${p}.avatar"></label>
+      <button data-link="img:${p}.avatar" title="링크로 프로필 사진 넣기" aria-label="링크로 프로필 사진 넣기">🔗</button>
+      <div class="grow"><label class="f" style="margin:0">아이디<input type="text" data-k="${p}.username" spellcheck="false" autocomplete="off"></label></div>
+    </div>
+    <div class="grid2"><label class="f">이름 (비우면 아이디)<input type="text" data-k="${p}.name"></label><label class="f">목록 시간<input type="text" data-k="${p}.time"></label></div>
+    <label class="f">활동 상태 문구<input type="text" data-k="${p}.active" placeholder="현재 활동 중"></label>
+    <label class="f">목록 미리보기 (비우면 마지막 메시지)<input type="text" data-k="${p}.preview"></label>
+    <label class="f">내 마지막 메시지 아래 문구<input type="text" data-k="${p}.seen" placeholder="읽음"></label>
+    <div class="checks">
+      <label><input type="checkbox" data-k="${p}.unread"> 안 읽음 (파란 점)</label>
+      <label><input type="checkbox" data-k="${p}.online"> 활동 중 (초록 점)</label>
+      <label><input type="checkbox" data-k="${p}.verified"> 인증 배지</label>
+      <label><input type="checkbox" data-k="${p}.intro"> 대화창 위 프로필 소개</label>
+    </div></div>`;
+  $('#dm-msgs').innerHTML = t.messages.map((m, j) => {
+    const mp = `${p}.messages.${j}`;
+    const who = `<div class="chips">${[['me', '나'], ['them', '상대'], ['time', '시간']].map(([v, l]) => `<button data-msg-from="${j}" data-v="${v}" class="${m.from === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+    return `<div class="item msg-${m.from}">
+      <div class="msg-head">${who}<span class="sp"></span><button data-msg-mv="${j}" data-d="-1" aria-label="위로">↑</button><button data-msg-mv="${j}" data-d="1" aria-label="아래로">↓</button><button data-msg-del="${j}" aria-label="삭제">✕</button></div>
+      ${m.from === 'time' ? `<label class="f">시간 표시<input type="text" data-k="${mp}.text" placeholder="오늘 오후 2:10"></label>` : `
+      <label class="f">메시지<textarea rows="2" data-k="${mp}.text"></textarea></label>
+      ${m.img ? `<div class="msg-img"><img src="${m.img}" alt=""><button class="btn" data-msg-img-clear="${j}">사진 빼기</button></div>` : ''}
+      <div class="btn-row"><label class="btn file">사진${m.img ? ' 바꾸기' : ' 넣기'}<input type="file" accept="image/*" data-img="${mp}.img"></label><button class="btn" data-link="img:${mp}.img">링크로 넣기</button></div>
+      <label class="f">반응 이모지 (비우면 없음)<input type="text" data-k="${mp}.react" placeholder="예: ❤️ 😂 👍"></label>`}
+    </div>`;
+  }).join('') + `<div class="btn-row"><button class="btn" data-msg-add="me">+ 내 메시지</button><button class="btn" data-msg-add="them">+ 상대 메시지</button><button class="btn" data-msg-add="time">+ 시간 표시</button></div>`;
+  syncForm($('#dm-colors')); syncForm($('#dm-threads')); syncForm($('#dm-msgs'));
+}
+function removeStory(gone) {
+  S.stories.splice(gone, 1);
+  if (!S.stories.length) S.stories.push(newStory());
+  S.ui.storyIdx = clamp(S.ui.storyIdx > gone ? S.ui.storyIdx - 1 : S.ui.storyIdx, 0, S.stories.length - 1);
+  S.account.highlights.forEach(h => { if (h.story === gone) h.story = -1; else if (h.story > gone) h.story--; });
+  const m = +S.feed.myStory; S.feed.myStory = m === gone ? -1 : m > gone ? m - 1 : m;
+}
 function renderHlEditor() {
   $('#hl-editor').innerHTML = S.account.highlights.map((h, i) => `
   <div class="item"><div class="item-head">
@@ -731,7 +951,7 @@ function renderHlEditor() {
     <div class="grow"><label class="f" style="margin:0"><input type="text" data-k="account.highlights.${i}.title"></label></div>
     <button data-hl-del="${i}" aria-label="삭제">✕</button>
   </div>
-  <label class="f">누르면 열리는 스토리<select data-k="account.highlights.${i}.story" data-num><option value="-1">없음</option>${S.stories.map((_, j) => `<option value="${j}">스토리 ${j + 1}</option>`).join('')}</select></label>
+  <label class="f">누르면 열리는 스토리<select data-k="account.highlights.${i}.story" data-num><option value="-1">없음</option>${S.stories.map((x, j) => `<option value="${j}">스토리 ${j + 1}${x.friend ? ` · ${esc(x.owner.username)}` : ''}</option>`).join('')}</select></label>
   </div>`).join('');
   syncForm($('#hl-editor'));
 }
@@ -836,6 +1056,8 @@ document.addEventListener('input', e => {
   let v = el.type === 'checkbox' ? el.checked : (el.type === 'range' || el.type === 'number' || el.hasAttribute('data-num')) ? +el.value : el.value;
   setPath(S, k, v);
   if (STRUCTURAL.test(k) || el.hasAttribute('data-restructure')) renderCommentEditor();
+  if (el.hasAttribute('data-rerender')) { renderAll(); save(); return; }
+  if (/^dm\.c[12]$/.test(k)) $$('[data-dm-color]').forEach(b => b.classList.remove('on'));
   if (/^story\.stickers\.\d+\.(scale|rot)$/.test(k)) {
     const kk = getPath(S, k.replace(/\.(scale|rot)$/, '')), node = $(`#story [data-k-id="${kk.id}"]`);
     if (node) { node.style.transform = stickerTransform(kk); save(); return; }
@@ -920,24 +1142,50 @@ document.addEventListener('click', e => {
     const i = S.ui[key], j = i + +(isPost ? d.mvPost : d.mvStory);
     if (j < 0 || j >= arr.length) return;
     [arr[i], arr[j]] = [arr[j], arr[i]]; S.ui[key] = j;
-    if (!isPost) S.account.highlights.forEach(h => { if (h.story === i) h.story = j; else if (h.story === j) h.story = i; });
+    if (!isPost) { S.account.highlights.forEach(h => { if (h.story === i) h.story = j; else if (h.story === j) h.story = i; }); if (+S.feed.myStory === i) S.feed.myStory = j; else if (+S.feed.myStory === j) S.feed.myStory = i; }
     renderAll(); save(); return;
   }
   if (d.newPost != null) { S.posts.push(newPost()); S.ui.postIdx = S.posts.length - 1; renderAll(); save(); return; }
   if (d.newStory != null) { S.stories.push(newStory()); S.ui.storyIdx = S.stories.length - 1; renderAll(); save(); return; }
   if (d.dupPost != null) { S.posts.splice(S.ui.postIdx + 1, 0, clone(S.post)); S.ui.postIdx++; renderAll(); save(); toast('게시물을 복제했어요.'); return; }
-  if (d.dupStory != null) { S.stories.splice(S.ui.storyIdx + 1, 0, clone(S.story)); S.ui.storyIdx++; S.account.highlights.forEach(h => { if (h.story > S.ui.storyIdx - 1) h.story++; }); renderAll(); save(); toast('스토리를 복제했어요.'); return; }
+  if (d.dupStory != null) { S.stories.splice(S.ui.storyIdx + 1, 0, clone(S.story)); S.ui.storyIdx++; S.account.highlights.forEach(h => { if (h.story > S.ui.storyIdx - 1) h.story++; }); if (+S.feed.myStory > S.ui.storyIdx - 1) S.feed.myStory++; renderAll(); save(); toast('스토리를 복제했어요.'); return; }
   if (d.delPost != null) {
     if (!armed(t, '한 번 더 누르면 삭제')) return;
     S.posts.splice(S.ui.postIdx, 1); S.ui.postIdx = clamp(S.ui.postIdx, 0, S.posts.length - 1); renderAll(); save(); return;
   }
   if (d.delStory != null) {
     if (!armed(t, '한 번 더 누르면 삭제')) return;
-    const gone = S.ui.storyIdx;
-    S.stories.splice(gone, 1); S.ui.storyIdx = clamp(gone, 0, S.stories.length - 1);
-    S.account.highlights.forEach(h => { if (h.story === gone) h.story = -1; else if (h.story > gone) h.story--; });
-    renderAll(); save(); return;
+    removeStory(S.ui.storyIdx); renderAll(); save(); return;
   }
+  if (d.delStoryAt != null) { if (!armed(t, '한 번 더 누르면 삭제')) return; removeStory(+d.delStoryAt); renderAll(); save(); return; }
+  if (d.editStory != null) { S.ui.storyIdx = +d.editStory; S.ui.tab = 'story'; renderAll(); save(); scrollTo({ top: 0 }); return; }
+  if (d.editPost != null) { S.ui.postIdx = +d.editPost; S.ui.tab = 'post'; renderAll(); save(); scrollTo({ top: 0 }); return; }
+  if (d.feedNew) {
+    const kind = d.feedNew, friends = S.stories.filter(x => x.friend).length + S.posts.filter(x => x.friend).length + 1;
+    if (kind === 'my-story' || kind === 'friend-story') {
+      const st = kind === 'friend-story' ? Object.assign(friendStory(), { owner: newOwner(friends) }) : newStory();
+      S.stories.push(st); S.ui.storyIdx = S.stories.length - 1;
+      if (kind === 'my-story') S.feed.myStory = S.ui.storyIdx;
+      S.ui.tab = 'story';
+    } else {
+      const po = newPost(); if (kind === 'friend-post') { po.friend = true; po.owner = newOwner(friends); }
+      S.posts.push(po); S.ui.postIdx = S.posts.length - 1; S.ui.tab = 'post';
+    }
+    renderAll(); save(); scrollTo({ top: 0 }); return;
+  }
+  if (d.dmView) { S.dm.view = d.dmView; renderAll(); save(); return; }
+  if (d.dmColor) { [S.dm.c1, S.dm.c2] = d.dmColor.split(','); renderAll(); save(); return; }
+  if (d.pickDm != null) { S.dm.idx = +d.pickDm; renderAll(); save(); return; }
+  if (d.dmNew != null) { S.dm.threads.push(newThread(S.dm.threads.length + 1)); S.dm.idx = S.dm.threads.length - 1; renderAll(); save(); return; }
+  if (d.dmMv != null) { const a = S.dm.threads, i = S.dm.idx, j = i + +d.dmMv; if (j >= 0 && j < a.length) { [a[i], a[j]] = [a[j], a[i]]; S.dm.idx = j; } renderAll(); save(); return; }
+  if (d.dmDel != null) { if (!armed(t, '한 번 더 누르면 삭제')) return; S.dm.threads.splice(S.dm.idx, 1); S.dm.idx = clamp(S.dm.idx, 0, S.dm.threads.length - 1); renderAll(); save(); return; }
+  if (d.msgAdd) { const ms = S.dm.threads[S.dm.idx].messages; ms.push(newMsg(d.msgAdd, d.msgAdd === 'time' ? '오늘 오후 3:00' : '')); renderAll(); save(); return; }
+  if (d.msgFrom != null) { S.dm.threads[S.dm.idx].messages[+d.msgFrom].from = d.v; renderAll(); save(); return; }
+  if (d.msgMv != null) { const a = S.dm.threads[S.dm.idx].messages, i = +d.msgMv, j = i + +d.d; if (j >= 0 && j < a.length) [a[i], a[j]] = [a[j], a[i]]; renderAll(); save(); return; }
+  if (d.msgDel != null) { S.dm.threads[S.dm.idx].messages.splice(+d.msgDel, 1); renderAll(); save(); return; }
+  if (d.msgImgClear != null) { S.dm.threads[S.dm.idx].messages[+d.msgImgClear].img = null; renderAll(); save(); return; }
+  if (t.id === 'contact-btn') { openContact(); return; }
+  if (t.id === 'contact-send') { sendContact(); return; }
   if (d.closeModal != null) { t.closest('.modal').hidden = true; return; }
   if (d.themeSet) { S.ui.theme = d.themeSet; renderAll(); save(); return; }
   if (d.thumb === 'post.photos') { S.post.index = +d.i; renderAll(); save(); return; }
@@ -993,7 +1241,9 @@ document.addEventListener('click', e => {
     const tab = S.ui.tab;
     if (tab === 'post') S.post = newPost();
     else if (tab === 'comments') S.comments = newComments();
-    else if (tab === 'story') S.story = newStory();
+    else if (tab === 'story') S.story = Object.assign(newStory(), { friend: S.story.friend, owner: S.story.owner });
+    else if (tab === 'feed') S.feed = newFeed();
+    else if (tab === 'dm') S.dm = newDM();
     else S.account = newAccount();
     renderAll(); save(); return;
   }
@@ -1006,6 +1256,18 @@ function armed(btn, label) {
   setTimeout(() => { if (btn.dataset.armed) { btn.textContent = btn.dataset.armed; delete btn.dataset.armed; } }, 3000);
   return false;
 }
+$('#pv-feed').addEventListener('click', e => {
+  const g = e.target.closest('[data-go-story], [data-go-dmlist]');
+  if (!g) return;
+  if (g.dataset.goStory != null) { S.ui.storyIdx = +g.dataset.goStory; S.ui.tab = 'story'; }
+  else { S.ui.tab = 'dm'; S.dm.view = 'list'; }
+  renderAll(); save(); scrollTo({ top: 0, behavior: 'smooth' });
+});
+$('#pv-dm').addEventListener('click', e => {
+  const g = e.target.closest('[data-go-dm]');
+  if (!g) return;
+  S.dm.idx = +g.dataset.goDm; S.dm.view = 'chat'; renderAll(); save();
+});
 // 프로필 미리보기: 썸네일 → 게시물, 하이라이트 → 스토리
 $('#pv-account').addEventListener('click', e => {
   const g = e.target.closest('[data-go-post], [data-go-story]');
@@ -1036,6 +1298,8 @@ function renderPreview() {
   if (t === 'post') renderPost();
   else if (t === 'comments') renderComments();
   else if (t === 'story') renderStory();
+  else if (t === 'feed') renderFeed();
+  else if (t === 'dm') renderDM();
   else renderAccount();
   $('#profile-avatar-img').src = avatarOf(S.profile.avatar);
 }
@@ -1045,12 +1309,15 @@ function renderAll() {
   $$('[data-theme-set]').forEach(b => b.classList.toggle('on', b.dataset.themeSet === S.ui.theme));
   $('#theme-seg').style.visibility = t === 'story' ? 'hidden' : '';
   $$('[data-pane]').forEach(el => { el.hidden = el.dataset.pane !== t; });
-  $('#hero-t').textContent = { post: 'Post', comments: 'Comments', story: 'Story', account: 'Profile' }[t];
+  $('#hero-t').textContent = { post: 'Post', comments: 'Comments', story: 'Story', account: 'Profile', feed: 'Feed', dm: 'Messages' }[t];
   renderLists();
   if (t === 'post') renderPostEditor();
   if (t === 'comments') renderCommentEditor();
   if (t === 'story') { renderLayouts(); renderCellEditor(); renderStickerEditor(); }
   if (t === 'account') { renderHlEditor(); renderGridEditor(); }
+  if (t === 'post' || t === 'story') renderOwnerEditors();
+  if (t === 'feed') renderFeedEditor();
+  if (t === 'dm') renderDMEditor();
   renderPreview();
   syncForm();
 }
@@ -1058,6 +1325,7 @@ function renderAll() {
 /* ───────── 이미지 저장 ───────── */
 const WEBFONTS = {
   'Noto Sans KR': 'Noto+Sans+KR:wght@400;500;600;700',
+  'Grand Hotel': 'Grand+Hotel',
   'Do Hyeon': 'Do+Hyeon',
   'Black Han Sans': 'Black+Han+Sans',
   'Nanum Pen Script': 'Nanum+Pen+Script',
@@ -1194,7 +1462,7 @@ function openHtmlNotice(everything) {
   $('#html-modal').hidden = false;
 }
 
-const FONT_URL = 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Do+Hyeon&family=Black+Han+Sans&family=Nanum+Pen+Script&family=Nanum+Gothic+Coding:wght@400;700&family=Nanum+Myeongjo:wght@700;800&display=swap';
+const FONT_URL = 'https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Noto+Sans+KR:wght@400;500;600;700&family=Do+Hyeon&family=Black+Han+Sans&family=Nanum+Pen+Script&family=Nanum+Gothic+Coding:wght@400;700&family=Nanum+Myeongjo:wght@700;800&display=swap';
 const VIEWER_CSS = `
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; min-height: 100vh; min-height: 100dvh; display: flex; justify-content: center; background: #fff; }
@@ -1209,7 +1477,11 @@ body.v-lock { overflow: hidden; }
 .v-tt { text-align: center; line-height: 1.2; }
 .v-tt small { display: block; font-size: 12px; color: var(--ig-sec); text-transform: uppercase; }
 .v-tt b { font-size: 16px; font-weight: 700; }
-.a-nav { position: sticky; bottom: 0; }
+.a-nav, .dc-foot { position: sticky; bottom: 0; z-index: 2; }
+.feed .f-body { overflow: visible; }
+.dmc.phone .dc-body { overflow-y: auto; justify-content: flex-start; }
+.dmc.phone .dc-body > :first-child { margin-top: auto; }
+.dm-top [data-back], .dc-top [data-back] { cursor: pointer; display: flex; }
 [data-go], [data-open], [data-story], [data-car], [data-close] { cursor: pointer; }
 .v-ov { position: fixed; inset: 0; z-index: 20; }
 .v-dim { position: absolute; inset: 0; background: rgba(0,0,0,.5); }
@@ -1225,7 +1497,15 @@ body.v-lock { overflow: hidden; }
 const VIEWER_JS = `(function () {
   var all = function (q) { return Array.prototype.slice.call(document.querySelectorAll(q)); };
   var timer = null;
-  function show(id) { var el = document.getElementById(id); if (!el) return; all('.v-scr').forEach(function (x) { x.hidden = x !== el; }); window.scrollTo(0, 0); }
+  var stack = [];
+  function cur() { var v = all('.v-scr').filter(function (x) { return !x.hidden; })[0]; return v ? v.id : ''; }
+  function show(id, back) {
+    var el = document.getElementById(id); if (!el) return;
+    var c = cur(); if (!back && c && c !== id) stack.push(c);
+    all('.v-scr').forEach(function (x) { x.hidden = x !== el; }); window.scrollTo(0, 0);
+    var b = el.querySelector('.dc-body'); if (b) b.scrollTop = b.scrollHeight;
+  }
+  window.addEventListener('load', function () { all('.dc-body').forEach(function (b) { b.scrollTop = b.scrollHeight; }); });
   function closeAll() { all('.v-ov[data-closable]').forEach(function (o) { o.hidden = true; }); document.body.classList.remove('v-lock'); clearTimeout(timer); }
   function open(id) { var el = document.getElementById(id); if (!el) return null; el.hidden = false; document.body.classList.add('v-lock'); return el; }
   function play(el) {
@@ -1247,7 +1527,7 @@ const VIEWER_JS = `(function () {
     var t = e.target.closest('[data-car],[data-close],[data-back],[data-go],[data-open],[data-story]'); if (!t) return;
     if (t.hasAttribute('data-car')) slide(t, e.clientX);
     else if (t.hasAttribute('data-close')) closeAll();
-    else if (t.hasAttribute('data-back')) show('s-home');
+    else if (t.hasAttribute('data-back')) { var f = all('.v-scr')[0]; show(stack.pop() || (f && f.id), true); }
     else if (t.getAttribute('data-go')) show(t.getAttribute('data-go'));
     else if (t.getAttribute('data-open')) open('ov-c-' + t.getAttribute('data-open'));
     else if (t.getAttribute('data-story')) { var el = open('ov-s-' + t.getAttribute('data-story')); if (el && el.hasAttribute('data-auto')) play(el); }
@@ -1264,12 +1544,12 @@ async function igCSS() {
 }
 const igWrap = (inner, cls = '') => `<div style="${fsStyle()}" class="ig ${cls}" data-theme="${S.ui.theme}">${inner}</div>`;
 function postScreen(i, withBack, hidden) {
-  const top = withBack ? `<div class="v-top"><button data-back aria-label="뒤로">${I.back()}</button><div class="v-tt"><small>${esc(S.profile.username)}</small><b>게시물</b></div><span style="width:26px"></span></div>` : '';
+  const top = withBack ? `<div class="v-top"><button data-back aria-label="뒤로">${I.back()}</button><div class="v-tt"><small>${esc(ownerOf(S.posts[i]).username)}</small><b>게시물</b></div><span style="width:26px"></span></div>` : '';
   return `<section class="v-scr" id="s-post-${i}"${hidden ? ' hidden' : ''}>${igWrap(statusBar() + top + postHTML(S.posts[i], { viewer: true, cid: i }))}</section>`;
 }
 function commentsOverlay(i, opened) {
   if (S.posts[i].commentsOff && !opened) return '';
-  return `<div class="v-ov" id="ov-c-${i}" data-closable${opened ? '' : ' hidden'}><div class="v-dim" data-close></div>${igWrap(sheetHTML(S.posts[i].comments, { viewer: true, off: S.posts[i].commentsOff }), 'v-sheet')}</div>`;
+  return `<div class="v-ov" id="ov-c-${i}" data-closable${opened ? '' : ' hidden'}><div class="v-dim" data-close></div>${igWrap(sheetHTML(S.posts[i].comments, { viewer: true, off: S.posts[i].commentsOff, owner: ownerOf(S.posts[i]) }), 'v-sheet')}</div>`;
 }
 // 스토리 사진 칸 위치는 실제로 그려 봐야 계산되므로 화면 밖에서 한 번 그린다
 async function storyMarkup(st, o) {
@@ -1328,8 +1608,11 @@ async function exportHTML(everything) {
     const u = S.profile.username, tab = S.ui.tab;
     let body, name, title;
     if (everything) {
-      const parts = [`<section class="v-scr" id="s-home">${accountHTML({ viewer: true })}</section>`];
+      const parts = [`<section class="v-scr" id="s-feed">${feedHTML({ viewer: true })}</section>`,
+        `<section class="v-scr" id="s-account" hidden>${accountHTML({ viewer: true })}</section>`];
       S.posts.forEach((_, i) => { parts.push(postScreen(i, true, true)); parts.push(commentsOverlay(i, false)); });
+      parts.push(`<section class="v-scr" id="s-dms" hidden>${dmListHTML({ viewer: true })}</section>`);
+      S.dm.threads.forEach((_, i) => parts.push(`<section class="v-scr" id="s-dm-${i}" hidden>${dmChatHTML(i, { viewer: true })}</section>`));
       for (let i = 0; i < S.stories.length; i++) parts.push(await storyOverlay(i, { auto: true }));
       body = parts.join('\n'); name = `${fileSafe(u)}-instagram.html`; title = `${u} • Instagram`;
     } else if (tab === 'post') {
@@ -1338,13 +1621,22 @@ async function exportHTML(everything) {
     } else if (tab === 'comments') {
       body = S.comments.backdrop
         ? postScreen(S.ui.postIdx, false, false) + commentsOverlay(S.ui.postIdx, true)
-        : `<section class="v-scr">${igWrap(sheetHTML(S.comments, { viewer: true, off: S.post.commentsOff }), 'cm-plain')}</section>`;
+        : `<section class="v-scr">${igWrap(sheetHTML(S.comments, { viewer: true, off: S.post.commentsOff, owner: ownerOf(S.post) }), 'cm-plain')}</section>`;
       name = `${fileSafe(u)}-comments-${S.ui.postIdx + 1}.html`; title = `${u} 댓글`;
     } else if (tab === 'story') {
       body = await storyOverlay(S.ui.storyIdx, { opened: true, closable: false });
       name = `${fileSafe(u)}-story-${S.ui.storyIdx + 1}.html`; title = `${u} 스토리`;
+    } else if (tab === 'feed') {
+      const parts = [`<section class="v-scr" id="s-feed">${feedHTML({ viewer: true })}</section>`];
+      S.posts.forEach((p, i) => { if (p.inFeed !== false) parts.push(commentsOverlay(i, false)); });
+      for (let i = 0; i < S.stories.length; i++) parts.push(await storyOverlay(i, { auto: true }));
+      body = parts.join('\n'); name = `${fileSafe(u)}-feed.html`; title = `${u} 피드`;
+    } else if (tab === 'dm') {
+      if (S.dm.view === 'chat') body = `<section class="v-scr" id="s-dm-${S.dm.idx}">${dmChatHTML(S.dm.idx, { viewer: true })}</section>`;
+      else body = [`<section class="v-scr" id="s-dms">${dmListHTML({ viewer: true })}</section>`].concat(S.dm.threads.map((_, i) => `<section class="v-scr" id="s-dm-${i}" hidden>${dmChatHTML(i, { viewer: true })}</section>`)).join('\n');
+      name = `${fileSafe(u)}-dm.html`; title = `${u} 메시지`;
     } else {
-      body = `<section class="v-scr" id="s-home">${accountHTML({ viewer: true })}</section>`;
+      body = `<section class="v-scr" id="s-account">${accountHTML({ viewer: true })}</section>`;
       name = `${fileSafe(u)}-profile.html`; title = `${u} • Instagram`;
     }
     downloadText(name, htmlDoc(title, body, css));
@@ -1355,6 +1647,32 @@ async function exportHTML(everything) {
   } finally {
     btn.textContent = label; btn.disabled = false;
   }
+}
+
+/* ───────── 문의·제보 (Formspree) ───────── */
+const CONTACT_URL = 'https://formspree.io/f/xljrkazq';
+function openContact() {
+  $('#contact-msg').value = ''; $('#contact-reply').value = '';
+  $('#contact-result').hidden = true;
+  $('#contact-modal').hidden = false;
+  setTimeout(() => $('#contact-msg').focus(), 50);
+}
+async function sendContact() {
+  const msg = $('#contact-msg').value.trim(), reply = $('#contact-reply').value.trim(), kind = $('#contact-kind').value;
+  const out = $('#contact-result'), btn = $('#contact-send');
+  if (!msg) { out.textContent = '내용을 적어 주세요.'; out.className = 'link-err'; out.hidden = false; return; }
+  btn.disabled = true; const label = btn.textContent; btn.textContent = '보내는 중…';
+  try {
+    const res = await fetch(CONTACT_URL, {
+      method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 종류: kind, 내용: msg, 답변받을곳: reply || '(없음)', 화면: S.ui.tab, 브라우저: navigator.userAgent, _subject: `[SEOL INSTA] ${kind}` }),
+    });
+    if (!res.ok) throw new Error(res.status);
+    out.textContent = '보냈어요. 고마워요!'; out.className = 'contact-ok'; out.hidden = false;
+    $('#contact-msg').value = '';
+  } catch {
+    out.textContent = '보내지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.'; out.className = 'link-err'; out.hidden = false;
+  } finally { btn.disabled = false; btn.textContent = label; }
 }
 
 /* ───────── 임시저장 (이 브라우저에만) ───────── */

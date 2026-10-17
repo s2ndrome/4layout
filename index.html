@@ -7,17 +7,19 @@
 <meta name="description" content="ZZUN MAKER">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Do+Hyeon&family=Black+Han+Sans&family=Nanum+Pen+Script&family=Nanum+Gothic+Coding:wght@400;700&family=Nanum+Myeongjo:wght@700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Noto+Sans+KR:wght@300;400;500;600;700&family=Do+Hyeon&family=Black+Han+Sans&family=Nanum+Pen+Script&family=Nanum+Gothic+Coding:wght@400;700&family=Nanum+Myeongjo:wght@700;800&display=swap">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="top">
-  <div class="brand"><b>SEOL INSTA</b></div>
+  <div class="brand-row"><div class="brand"><b>SEOL INSTA</b></div><button class="btn ghost contact-btn" id="contact-btn">문의 / 제보</button></div>
   <nav class="tabs" role="tablist">
     <button role="tab" data-tab="post"><sup>01</sup>게시물</button>
     <button role="tab" data-tab="comments"><sup>02</sup>댓글</button>
     <button role="tab" data-tab="story"><sup>03</sup>스토리</button>
     <button role="tab" data-tab="account"><sup>04</sup>내 계정</button>
+    <button role="tab" data-tab="feed"><sup>05</sup>피드</button>
+    <button role="tab" data-tab="dm"><sup>06</sup>DM</button>
   </nav>
   <button class="btn ghost slots-btn" id="slots-btn">임시저장</button>
 </header>
@@ -43,6 +45,10 @@
     <div class="pv-stage" id="pv-comments" data-pane="comments"></div>
     <div class="pv-stage" id="pv-story" data-pane="story"></div>
     <div class="pv-stage" id="pv-account" data-pane="account"></div>
+    <div class="pv-stage" id="pv-feed" data-pane="feed"></div>
+    <div class="pv-stage" id="pv-dm" data-pane="dm"></div>
+    <p class="pv-hint" data-pane="feed">스토리 동그라미를 누르면 그 스토리 편집으로, DM 아이콘을 누르면 DM 탭으로 가요.</p>
+    <p class="pv-hint" data-pane="dm">목록에서 대화방을 누르면 그 대화창이 열려요.</p>
     <p class="pv-hint" data-pane="story">스티커는 드래그로 이동, 두 손가락(또는 마우스 휠)으로 크기 조절 · Shift+휠로 회전. 사진 칸도 드래그로 위치를 옮길 수 있어요.</p>
   </section>
 
@@ -90,6 +96,11 @@
       <details class="box" open>
         <summary>게시물 목록 <small>프로필 피드에 이 순서로 나와요</small></summary>
         <div id="post-list"></div>
+      </details>
+      <details class="box" open>
+        <summary>누구의 게시물인가요?</summary>
+        <div class="checks"><label><input type="checkbox" data-k="post.friend" data-rerender> 친구 계정 게시물</label><label><input type="checkbox" data-k="post.inFeed"> 홈 피드에 보이기</label></div>
+        <div id="post-owner"></div>
       </details>
       <details class="box" open>
         <summary>사진</summary>
@@ -171,6 +182,11 @@
         <div id="story-list"></div>
       </details>
       <details class="box" open>
+        <summary>누구의 스토리인가요?</summary>
+        <div class="checks"><label><input type="checkbox" data-k="story.friend" data-rerender> 친구 스토리</label><label><input type="checkbox" data-k="story.seen"> 이미 본 스토리 (피드에서 회색 테두리)</label></div>
+        <div id="story-owner"></div>
+      </details>
+      <details class="box" open>
         <summary>레이아웃</summary>
         <div class="layouts" id="layouts"></div>
         <div id="cell-editor"></div>
@@ -223,6 +239,42 @@
     </div>
 
     <!-- 내 계정 -->
+    <div data-pane="feed">
+      <details class="box" open>
+        <summary>상단</summary>
+        <label class="f">로고 글자<input type="text" data-k="feed.logo"></label>
+        <label class="f">DM 안 읽은 수 (비우면 숨김)<input type="text" data-k="feed.dmBadge"></label>
+        <div class="checks"><label><input type="checkbox" data-k="feed.heartDot"> 알림 빨간 점</label></div>
+      </details>
+      <details class="box" open>
+        <summary>스토리 줄</summary>
+        <div id="feed-stories"></div>
+      </details>
+      <details class="box" open>
+        <summary>피드 게시물 <small>게시물 목록 순서대로 나와요</small></summary>
+        <div id="feed-posts"></div>
+      </details>
+    </div>
+
+    <div data-pane="dm">
+      <details class="box" open>
+        <summary>보여줄 화면</summary>
+        <div class="seg dm-seg"><button data-dm-view="list">메시지 목록</button><button data-dm-view="chat">대화창</button></div>
+      </details>
+      <details class="box" open>
+        <summary>내 말풍선 색</summary>
+        <div id="dm-colors"></div>
+      </details>
+      <details class="box" open>
+        <summary>대화방</summary>
+        <div id="dm-threads"></div>
+      </details>
+      <details class="box" open>
+        <summary>대화 내용 <small>지금 고른 대화방</small></summary>
+        <div id="dm-msgs"></div>
+      </details>
+    </div>
+
     <div data-pane="account">
       <details class="box" open>
         <summary>프로필</summary>
@@ -297,6 +349,17 @@
     <p class="html-notice">HTML 파일로 저장 시에는 이미지 링크로 이미지를 넣어야 파일 크기가 커지지 않습니다. HTML 코드를 다운받아 사용하려면 반드시 링크로 이미지를 추가해 주세요!</p>
     <p class="link-err" id="html-embedded" hidden></p>
     <div class="btn-row"><button class="primary" id="html-go">저장하기</button><button class="btn" data-close-modal>취소</button></div>
+  </div>
+</div>
+<div class="modal" id="contact-modal" hidden>
+  <div class="modal-card">
+    <div class="modal-head"><b>문의 / 제보</b><button data-close-modal aria-label="닫기">✕</button></div>
+    <p class="html-notice">오류 및 버그 제보는 이쪽으로 부탁드립니다 ~<br>문의 시에는 답변 받으실 창구도 알려주셔야 답변 가능합니다 !</p>
+    <label class="f">종류<select id="contact-kind"><option>오류 · 버그 제보</option><option>문의</option><option>기능 제안</option></select></label>
+    <label class="f">내용<textarea id="contact-msg" rows="5" placeholder="어떤 화면에서 무엇을 했을 때 어떤 문제가 생겼는지 적어 주세요."></textarea></label>
+    <label class="f">답변 받으실 곳 (이메일, 인스타 아이디 등)<input type="text" id="contact-reply" autocomplete="off"></label>
+    <p id="contact-result" hidden></p>
+    <div class="btn-row"><button class="primary" id="contact-send">보내기</button><button class="btn" data-close-modal>닫기</button></div>
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
