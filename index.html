@@ -347,6 +347,16 @@
   <div class="modal-card">
     <div class="modal-head"><b>HTML 파일로 저장</b><button data-close-modal aria-label="닫기">✕</button></div>
     <p class="html-notice">HTML 파일로 저장 시에는 이미지 링크로 이미지를 넣어야 파일 크기가 커지지 않습니다. HTML 코드를 다운받아 사용하려면 반드시 링크로 이미지를 추가해 주세요!</p>
+    <details class="xbox" open>
+      <summary>링크로 넣은 사진이 엑박(깨진 그림)으로 보이는 이유</summary>
+      <ul>
+        <li><b>사진 주소가 아니라 웹페이지 주소인 경우</b> — 게시글·핀 주소 말고, 사진을 길게 누르거나 오른쪽 클릭해서 "이미지 주소 복사"한 링크를 넣어 주세요.</li>
+        <li><b>사진을 다른 곳에서 못 쓰게 막아 둔 사이트</b> — 네이버 블로그·카페, 인스타그램, 일부 커뮤니티 사진은 그 사이트 밖에서 열면 엑박이 떠요.</li>
+        <li><b>시간이 지나면 사라지는 주소</b> — 인스타그램·페이스북·디스코드 등의 사진 주소는 며칠 뒤 만료돼서 처음엔 보이다가 나중에 엑박이 될 수 있어요.</li>
+        <li><b>비공개이거나 지워진 사진</b> — 구글 드라이브는 "링크가 있는 모든 사용자"로 공유해야 해요. 원본 사진을 지우면 엑박이 돼요.</li>
+      </ul>
+      <p>확인 방법: 링크를 새 창에 붙여 넣었을 때 <b>사진만 단독으로</b> 뜨면 괜찮아요. 오래 쓸 사진은 imgur, postimages 같은 이미지 호스팅 사이트에 올린 뒤 그 이미지 주소를 쓰는 게 가장 안전해요.</p>
+    </details>
     <p class="link-err" id="html-embedded" hidden></p>
     <div class="btn-row"><button class="primary" id="html-go">저장하기</button><button class="btn" data-close-modal>취소</button></div>
   </div>

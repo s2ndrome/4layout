@@ -243,6 +243,12 @@ input[type=checkbox]:checked::after { transform: scale(1); }
 .dm-seg { margin-top: 6px; }
 #pv-feed [data-go-story], #pv-feed [data-go-dmlist], #pv-dm [data-go-dm] { cursor: pointer; }
 
+.xbox { border: 1.5px solid var(--line); padding: 8px 12px; font-size: 11.5px; line-height: 1.6; color: var(--ink); max-height: 40vh; overflow-y: auto; }
+.xbox summary { cursor: pointer; font-weight: 700; font-size: 12px; color: var(--blue-d); }
+.xbox ul { margin: 6px 0 0; padding-left: 16px; }
+.xbox li + li { margin-top: 4px; }
+.xbox p { margin: 8px 0 0; color: var(--mid); }
+
 /* ───────── 인스타그램 UI ───────── */
 .ig {
   --ig-bg: #fff; --ig-ink: #000; --ig-sec: #737373; --ig-line: #dbdbdb; --ig-link: #00376b;
