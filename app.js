@@ -104,7 +104,7 @@ function newStory() {
     layout: '4', cells: [], sel: 0, gap: 0.5, gapColor: '#ffffff',
     bg: 'linear-gradient(160deg,#833ab4,#fd1d1d 55%,#fcb045)',
     stickers: [], selSticker: null,
-    showTop: true, count: 3, current: 1, progress: 40, time: '3시간', bottom: 'reply',
+    showTop: true, count: 1, current: 1, progress: 40, time: '3시간', bottom: 'reply',
     friend: false, owner: newOwner(), seen: false,
   };
 }
@@ -166,6 +166,8 @@ function hydrate(saved) {
   else if (saved.story) d.stories = [Object.assign(newStory(), saved.story)];
   d.posts.forEach(x => { x.owner = Object.assign(newOwner(), x.owner); });
   d.stories.forEach(x => { x.owner = Object.assign(newOwner(), x.owner); });
+  // 예전 기본값(진행 바 3개)을 그대로 쓰던 스토리는 1개로
+  d.stories.forEach(x => { if (+x.count === 3 && +x.current === 1 && +x.progress === 40) x.count = 1; });
   if (!Array.isArray(d.feed.myStories)) d.feed.myStories = +d.feed.myStory >= 0 ? [+d.feed.myStory] : [];
   delete d.feed.myStory;
   d.dm.threads = (d.dm.threads || []).map(t => Object.assign(newThread(), t, { messages: (t.messages || []).map(m => Object.assign(newMsg('me'), m)) }));
