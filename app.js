@@ -1360,6 +1360,37 @@ async function buildFontCSS(node) {
   return parts.join('\n');
 }
 let exporting = false;
+const BLANK_PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+const extCache = new Map();
+// 다른 사이트 사진을 PNG에 넣을 수 있는 형태(data URL)로 바꾼다. 막혀 있으면 이미지 중계 서버로 한 번 더 시도
+async function toDataURLFrom(url) {
+  if (extCache.has(url)) return extCache.get(url);
+  const tryFetch = async u => {
+    const res = await fetch(u, { mode: 'cors', cache: 'force-cache' });
+    if (!res.ok) throw new Error(res.status);
+    const b = await res.blob();
+    if (!/^image\//.test(b.type)) throw new Error('not image');
+    return blobToDataURL(b);
+  };
+  let out = null;
+  try { out = await tryFetch(url); } catch {
+    try { out = await tryFetch(`https://images.weserv.nl/?url=${encodeURIComponent(url.replace(/^https?:\/\//, ''))}&output=png`); } catch { out = null; }
+  }
+  extCache.set(url, out);
+  return out;
+}
+// 저장하는 동안만 링크 사진을 바꿔 끼우고, 끝나면 되돌린다
+async function inlineExternalImages(node) {
+  const imgs = [...node.querySelectorAll('img')].filter(im => /^https?:/i.test(im.getAttribute('src') || ''));
+  const restore = [], failed = [];
+  await Promise.all(imgs.map(async im => {
+    const src = im.getAttribute('src'), data = await toDataURLFrom(src);
+    restore.push([im, src]);
+    if (data) im.setAttribute('src', data); else { im.setAttribute('src', BLANK_PX); failed.push(src); }
+  }));
+  await Promise.all(imgs.map(im => (im.decode ? im.decode().catch(() => {}) : null)));
+  return { failed: failed.length, restore: () => restore.forEach(([im, src]) => im.setAttribute('src', src)) };
+}
 async function exportCurrent() {
   if (exporting) return;
   const node = $(`#pv-${S.ui.tab} .shot`);
@@ -1367,22 +1398,35 @@ async function exportCurrent() {
   exporting = true;
   const btn = $('#export-btn'); const label = btn.textContent; btn.textContent = '만드는 중…'; btn.disabled = true;
   document.body.classList.add('exporting');
+  let ext = null;
   try {
     await document.fonts.ready;
-    const fontEmbedCSS = await buildFontCSS(node);
-    const ratio = S.ui.tab === 'story' ? 1080 / node.offsetWidth : 3;
-    const opts = { pixelRatio: ratio, fontEmbedCSS, cacheBust: false, backgroundColor: S.ui.tab === 'story' ? '#000' : undefined };
-    if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) await htmlToImage.toPng(node, opts); // 사파리 첫 렌더 이미지 누락 방지
-    const url = await htmlToImage.toPng(node, opts);
-    if ([...node.querySelectorAll('img')].some(im => /^https?:/.test(im.getAttribute('src') || ''))) setTimeout(() => toast('링크로 넣은 사진은 사이트에 따라 PNG에 안 나올 수 있어요. 안 나오면 그 사진만 파일로 올려 주세요.'), 400);
+    ext = await inlineExternalImages(node);
+    let fontEmbedCSS = '';
+    try { fontEmbedCSS = await buildFontCSS(node); } catch { fontEmbedCSS = ''; }
+    const base = S.ui.tab === 'story' ? 1080 / node.offsetWidth : 3;
+    const safari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    let url = null, lastErr = null;
+    // 실패하면 해상도를 낮추고, 글꼴 없이 한 번 더 시도
+    for (const [ratio, fonts] of [[base, fontEmbedCSS], [base * 2 / 3, fontEmbedCSS], [base * 2 / 3, '']]) {
+      const opts = { pixelRatio: ratio, fontEmbedCSS: fonts, cacheBust: false, imagePlaceholder: BLANK_PX, backgroundColor: S.ui.tab === 'story' ? '#000' : undefined };
+      try {
+        if (safari) await htmlToImage.toPng(node, opts); // 사파리 첫 렌더 이미지 누락 방지
+        url = await htmlToImage.toPng(node, opts);
+        break;
+      } catch (err) { lastErr = err; console.error(err); }
+    }
+    if (!url) throw lastErr || new Error('export failed');
+    if (ext.failed) setTimeout(() => toast(`링크로 넣은 사진 ${ext.failed}장은 그 사이트가 막아서 PNG에 넣지 못했어요. 그 사진만 파일로 올려 주세요.`), 400);
     const name = `instagram-${S.ui.tab}-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '')}.png`;
     $('#modal-img').src = url;
     const dl = $('#modal-dl'); dl.href = url; dl.download = name;
     $('#modal').hidden = false;
   } catch (err) {
     console.error(err);
-    toast('이미지를 만들지 못했어요. 다시 시도해 주세요.');
+    toast(`이미지를 만들지 못했어요. 다시 시도해 주세요. (${(err && (err.message || err.type)) || '알 수 없는 오류'})`);
   } finally {
+    if (ext) ext.restore();
     document.body.classList.remove('exporting');
     btn.textContent = label; btn.disabled = false; exporting = false;
   }
