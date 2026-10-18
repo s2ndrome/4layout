@@ -1700,14 +1700,27 @@ async function exportHTML(everything) {
 
 /* ───────── 문의·제보 (Formspree) ───────── */
 const CONTACT_URL = 'https://formspree.io/f/xljrkazq';
+// 종류마다 내용 칸 안내 문구와 답변 받을 곳 칸이 달라진다
+const CONTACT_HINTS = {
+  '오류 · 버그 제보': '어떤 화면에서 무엇을 했을 때 어떤 문제가 생겼는지 적어 주세요.\n오류 및 버그만 제보 받으며 배포글 타래에 적어둔 질답을 먼저 확인 부탁드립니다.',
+  '문의': '기본적인 사용법이나 HTML 파일에 대한 문의는 일절 받지 않습니다.',
+  '기능 제안': '추가됐으면 하는 기능을 적어 주세요.',
+};
+function syncContactKind() {
+  const kind = $('#contact-kind').value;
+  $('#contact-msg').placeholder = CONTACT_HINTS[kind] || '';
+  $('#contact-reply-row').hidden = kind !== '문의';
+}
+document.addEventListener('change', e => { if (e.target.id === 'contact-kind') syncContactKind(); });
 function openContact() {
   $('#contact-msg').value = ''; $('#contact-reply').value = '';
+  syncContactKind();
   $('#contact-result').hidden = true;
   $('#contact-modal').hidden = false;
   setTimeout(() => $('#contact-msg').focus(), 50);
 }
 async function sendContact() {
-  const msg = $('#contact-msg').value.trim(), reply = $('#contact-reply').value.trim(), kind = $('#contact-kind').value;
+  const kind = $('#contact-kind').value, msg = $('#contact-msg').value.trim(), reply = kind === '문의' ? $('#contact-reply').value.trim() : '';
   const out = $('#contact-result'), btn = $('#contact-send');
   if (!msg) { out.textContent = '내용을 적어 주세요.'; out.className = 'link-err'; out.hidden = false; return; }
   btn.disabled = true; const label = btn.textContent; btn.textContent = '보내는 중…';
