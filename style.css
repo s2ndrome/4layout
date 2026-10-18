@@ -472,7 +472,8 @@ input[type=checkbox]:checked::after { transform: scale(1); }
 .f-ic { position: relative; display: flex; margin-left: 20px; }
 .f-dot { position: absolute; top: 0; right: -1px; width: 8px; height: 8px; border-radius: 50%; background: var(--ig-red); border: 1.5px solid var(--ig-bg); }
 .f-badge { position: absolute; top: -6px; right: -9px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--ig-red); color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; border: 1.5px solid var(--ig-bg); box-sizing: content-box; }
-.f-tray { display: flex; gap: 14px; padding: 6px 12px 12px; overflow: hidden; border-bottom: .5px solid var(--ig-line); }
+.f-tray { display: flex; gap: 14px; padding: 6px 12px 12px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; border-bottom: .5px solid var(--ig-line); }
+.f-tray::-webkit-scrollbar { display: none; }
 .ft { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 74px; flex: none; }
 .ft span { font-size: calc(12px * var(--fs, 1)); max-width: 74px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ft-c { position: relative; width: 70px; height: 70px; border-radius: 50%; padding: 3px; }
@@ -553,3 +554,13 @@ input[type=checkbox]:checked::after { transform: scale(1); }
 .dc-cam { width: 34px; height: 34px; border-radius: 50%; background: #3797f0; color: #fff; display: flex; align-items: center; justify-content: center; flex: none; }
 .a-nav > span { display: flex; }
 .ig *, .ig *::before, .ig *::after, .story *, .story *::before, .story *::after { box-sizing: border-box; }
+
+/* 여러 장 사진 넘기기 */
+.p-track { position: absolute; inset: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.p-track::-webkit-scrollbar { display: none; }
+.p-slide { position: relative; flex: 0 0 100%; height: 100%; overflow: hidden; scroll-snap-align: start; scroll-snap-stop: always; }
+.p-slide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.p-media .p-count { z-index: 2; }
+.p-nav { position: absolute; top: 50%; width: 30px; height: 30px; margin-top: -15px; border: 0; border-radius: 50%; background: rgba(255,255,255,.85); color: #262626; font-size: 22px; line-height: 28px; padding: 0; cursor: pointer; z-index: 3; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+.p-nav.prev { left: 10px; } .p-nav.next { right: 10px; }
+.exporting .p-nav { display: none; }

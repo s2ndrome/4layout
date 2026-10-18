@@ -108,7 +108,7 @@ function newStory() {
     friend: false, owner: newOwner(), seen: false,
   };
 }
-function newFeed() { return { logo: 'Instagram', heartDot: true, dmBadge: '2', myStory: 0 }; }
+function newFeed() { return { logo: 'Instagram', heartDot: true, dmBadge: '2', myStories: [0] }; }
 function newMsg(from, text = '') { return { id: uid(), from, text, img: null, react: '' }; }
 function newThread(n = 1) {
   return {
@@ -156,6 +156,7 @@ function attach(st) {
   return st;
 }
 function hydrate(saved) {
+  if (saved && typeof saved === 'object') { try { saved = JSON.parse(JSON.stringify(saved).replace(/https:\/\/drive\.google\.com\/thumbnail\?id=([\w-]+)&sz=w2000/g, 'https://lh3.googleusercontent.com/d/$1=w2000')); } catch { /* 그대로 */ } }
   const d = defaults();
   if (!saved || typeof saved !== 'object') return attach(d);
   for (const k of ['ui', 'profile', 'account', 'feed', 'dm']) if (saved[k] && typeof saved[k] === 'object') d[k] = Object.assign(d[k], saved[k]);
@@ -165,6 +166,8 @@ function hydrate(saved) {
   else if (saved.story) d.stories = [Object.assign(newStory(), saved.story)];
   d.posts.forEach(x => { x.owner = Object.assign(newOwner(), x.owner); });
   d.stories.forEach(x => { x.owner = Object.assign(newOwner(), x.owner); });
+  if (!Array.isArray(d.feed.myStories)) d.feed.myStories = +d.feed.myStory >= 0 ? [+d.feed.myStory] : [];
+  delete d.feed.myStory;
   d.dm.threads = (d.dm.threads || []).map(t => Object.assign(newThread(), t, { messages: (t.messages || []).map(m => Object.assign(newMsg('me'), m)) }));
   if (!d.dm.threads.length) d.dm.threads = newDM().threads;
   d.dm.idx = clamp(+d.dm.idx || 0, 0, d.dm.threads.length - 1);
@@ -289,9 +292,10 @@ function postHTML(p = S.post, o = {}) {
       ${I.more()}
     </header>
     <div class="p-media" style="aspect-ratio:${rw}/${rh}"${o.viewer && photos.length > 1 ? ' data-car' : ''}${o.crop && cur ? ' data-crop="post"' : ''}>
-      ${o.viewer && photos.length > 1 ? photos.map((src, i) => `<img src="${src}" alt="" data-ph="${i}" style="${cropCSS((p.crops || [])[i])}"${i === idx ? '' : ' hidden'}>`).join('')
+      ${o.viewer && photos.length > 1 ? `<div class="p-track" data-start="${idx}">${photos.map((src, i) => `<div class="p-slide"><img src="${src}" alt="" style="${cropCSS((p.crops || [])[i])}"></div>`).join('')}</div>`
         : cur ? `<img src="${cur}" alt="" style="${cropCSS((p.crops || [])[idx])}">` : o.viewer ? '' : `<div class="ph-empty">${I.photo()}<span>사진을 추가하세요</span></div>`}
       ${photos.length > 1 ? `<span class="p-count">${idx + 1}/${photos.length}</span>` : ''}
+      ${o.crop && photos.length > 1 ? `<button class="p-nav prev" data-photo-step="-1" aria-label="이전 사진"${idx === 0 ? ' hidden' : ''}>‹</button><button class="p-nav next" data-photo-step="1" aria-label="다음 사진"${idx === photos.length - 1 ? ' hidden' : ''}>›</button>` : ''}
     </div>
     ${inline ? dots : ''}
     <div class="p-act">
@@ -418,15 +422,26 @@ function navHTML(active, viewer) {
 }
 
 /* ───────── 홈 피드 ───────── */
-function myStoryIdx() {
-  const i = +S.feed.myStory;
-  return i >= 0 && S.stories[i] && !S.stories[i].friend ? i : -1;
+function myStoryList() {
+  return (S.feed.myStories || []).filter(i => S.stories[i] && !S.stories[i].friend);
+}
+// 같은 아이디의 친구 스토리는 동그라미 하나로 묶는다
+function friendGroups() {
+  const groups = [], byName = {};
+  S.stories.forEach((st, i) => {
+    if (!st.friend) return;
+    const key = (st.owner.username || '').trim().toLowerCase();
+    if (!(key in byName)) { byName[key] = groups.length; groups.push({ owner: st.owner, list: [] }); }
+    groups[byName[key]].list.push(i);
+  });
+  return groups;
 }
 function feedHTML(o = {}) {
-  const pr = S.profile, f = S.feed, my = myStoryIdx();
-  const link = i => (o.viewer ? ` data-story="${i}"` : ` data-go-story="${i}"`);
-  const tray = [`<div class="ft"${my >= 0 ? link(my) : ''}><div class="ft-c ${my >= 0 ? (S.stories[my].seen ? 'seen' : 'new') : 'none'}">${avatarImg(pr.avatar)}${my < 0 ? `<span class="ft-plus">${I.plus(12)}</span>` : ''}</div><span>내 스토리</span></div>`]
-    .concat(S.stories.map((st, i) => (st.friend ? `<div class="ft"${link(i)}><div class="ft-c ${st.seen ? 'seen' : 'new'}">${avatarImg(st.owner.avatar)}</div><span>${esc(st.owner.username)}</span></div>` : '')).filter(Boolean)).join('');
+  const pr = S.profile, f = S.feed, my = myStoryList();
+  const link = list => (o.viewer ? ` data-story="${list.join(',')}"` : ` data-go-story="${list[0]}"`);
+  const ring = list => (list.every(i => S.stories[i].seen) ? 'seen' : 'new');
+  const tray = [`<div class="ft"${my.length ? link(my) : ''}><div class="ft-c ${my.length ? ring(my) : 'none'}">${avatarImg(pr.avatar)}${my.length ? '' : `<span class="ft-plus">${I.plus(12)}</span>`}</div><span>내 스토리</span></div>`]
+    .concat(friendGroups().map(g => `<div class="ft"${link(g.list)}><div class="ft-c ${ring(g.list)}">${avatarImg(g.owner.avatar)}</div><span>${esc(g.owner.username)}</span></div>`)).join('');
   const posts = S.posts.map((p, i) => (p.inFeed === false ? '' : postHTML(p, o.viewer ? { viewer: true, cid: i } : {}))).filter(Boolean).join('');
   const dmAttr = o.viewer ? ' data-go="s-dms"' : ' data-go-dmlist';
   return `<div style="${fsStyle()}" class="ig shot feed${o.viewer ? '' : ' phone'}" data-theme="${S.ui.theme}">
@@ -782,6 +797,7 @@ function cropImgsFor(kind) {
 const cropG = { ptrs: new Map(), g: null };
 function cropAnchor(g, x, y) { g.sx = x; g.sy = y; g.fx0 = g.c.fx; g.fy0 = g.c.fy; }
 function onCropDown(e) {
+  if (e.target.closest('.p-nav')) return;
   const el = e.target.closest('[data-crop]'); if (!el) return;
   const c = cropTarget(el.dataset.crop); if (!c) return;
   e.preventDefault();
@@ -885,17 +901,22 @@ function renderOwnerEditors() {
   if (b) { b.innerHTML = ownerEditorHTML('story'); syncForm(b); }
 }
 function renderFeedEditor() {
-  const my = myStoryIdx();
-  const mine = S.stories.map((x, i) => (x.friend ? '' : `<option value="${i}">스토리 ${i + 1}</option>`)).join('');
+  const myList = myStoryList();
+  const mine = S.stories.map((x, i) => (x.friend ? '' : `
+    <div class="item"><div class="item-head"><img class="sq" src="${storyCover(i) || avatarOf(S.profile.avatar)}" alt=""><div class="grow">스토리 ${i + 1}</div></div>
+      <div class="checks"><label><input type="checkbox" data-my-story="${i}"${myList.includes(i) ? ' checked' : ''}> 피드 내 스토리에 넣기</label><label><input type="checkbox" data-k="stories.${i}.seen"> 이미 본 스토리</label></div>
+      <div class="btn-row"><button class="btn" data-edit-story="${i}">꾸미기</button></div></div>`)).join('');
   const friends = S.stories.map((x, i) => (x.friend ? `
     <div class="item"><div class="item-head"><img src="${avatarOf(x.owner.avatar)}" alt=""><div class="grow">${esc(x.owner.username)} <small class="muted">스토리 ${i + 1}</small></div></div>
       <div class="checks"><label><input type="checkbox" data-k="stories.${i}.seen"> 이미 본 스토리 (회색 테두리)</label></div>
       <div class="btn-row"><button class="btn" data-edit-story="${i}">꾸미기 · 아이디 바꾸기</button><button class="btn danger" data-del-story-at="${i}">삭제</button></div></div>` : '')).join('');
   $('#feed-stories').innerHTML = `
-    <label class="f">내 스토리<select data-k="feed.myStory" data-num><option value="-1">없음 (＋ 표시)</option>${mine}</select></label>
-    ${my >= 0 ? `<div class="checks"><label><input type="checkbox" data-k="stories.${my}.seen"> 이미 본 스토리 (회색 테두리)</label></div>` : ''}
-    <div class="btn-row">${my >= 0 ? `<button class="btn" data-edit-story="${my}">내 스토리 꾸미기</button>` : ''}<button class="btn" data-feed-new="my-story">+ 내 스토리 새로 만들기</button></div>
+    <h4 class="sub-h">내 스토리</h4>
+    <p class="muted">체크한 스토리가 순서대로 이어서 보여요. 하나도 없으면 파란 ＋가 붙은 내 프로필이 보여요.</p>
+    ${mine || '<p class="muted">아직 내 스토리가 없어요.</p>'}
+    <button class="btn" data-feed-new="my-story">+ 내 스토리 새로 만들기</button>
     <h4 class="sub-h">친구 스토리</h4>
+    <p class="muted">같은 아이디의 스토리는 동그라미 하나로 묶여서, 누르면 차례로 이어서 보여요.</p>
     ${friends || '<p class="muted">아직 친구 스토리가 없어요.</p>'}
     <button class="btn" data-feed-new="friend-story">+ 친구 스토리 추가</button>`;
   $('#feed-posts').innerHTML = S.posts.map((x, i) => `
@@ -948,7 +969,7 @@ function removeStory(gone) {
   if (!S.stories.length) S.stories.push(newStory());
   S.ui.storyIdx = clamp(S.ui.storyIdx > gone ? S.ui.storyIdx - 1 : S.ui.storyIdx, 0, S.stories.length - 1);
   S.account.highlights.forEach(h => { if (h.story === gone) h.story = -1; else if (h.story > gone) h.story--; });
-  const m = +S.feed.myStory; S.feed.myStory = m === gone ? -1 : m > gone ? m - 1 : m;
+  S.feed.myStories = (S.feed.myStories || []).filter(i => i !== gone).map(i => (i > gone ? i - 1 : i));
 }
 function renderHlEditor() {
   $('#hl-editor').innerHTML = S.account.highlights.map((h, i) => `
@@ -1148,13 +1169,13 @@ document.addEventListener('click', e => {
     const i = S.ui[key], j = i + +(isPost ? d.mvPost : d.mvStory);
     if (j < 0 || j >= arr.length) return;
     [arr[i], arr[j]] = [arr[j], arr[i]]; S.ui[key] = j;
-    if (!isPost) { S.account.highlights.forEach(h => { if (h.story === i) h.story = j; else if (h.story === j) h.story = i; }); if (+S.feed.myStory === i) S.feed.myStory = j; else if (+S.feed.myStory === j) S.feed.myStory = i; }
+    if (!isPost) { S.account.highlights.forEach(h => { if (h.story === i) h.story = j; else if (h.story === j) h.story = i; }); S.feed.myStories = (S.feed.myStories || []).map(x => (x === i ? j : x === j ? i : x)); }
     renderAll(); save(); return;
   }
   if (d.newPost != null) { S.posts.push(newPost()); S.ui.postIdx = S.posts.length - 1; renderAll(); save(); return; }
   if (d.newStory != null) { S.stories.push(newStory()); S.ui.storyIdx = S.stories.length - 1; renderAll(); save(); return; }
   if (d.dupPost != null) { S.posts.splice(S.ui.postIdx + 1, 0, clone(S.post)); S.ui.postIdx++; renderAll(); save(); toast('게시물을 복제했어요.'); return; }
-  if (d.dupStory != null) { S.stories.splice(S.ui.storyIdx + 1, 0, clone(S.story)); S.ui.storyIdx++; S.account.highlights.forEach(h => { if (h.story > S.ui.storyIdx - 1) h.story++; }); if (+S.feed.myStory > S.ui.storyIdx - 1) S.feed.myStory++; renderAll(); save(); toast('스토리를 복제했어요.'); return; }
+  if (d.dupStory != null) { S.stories.splice(S.ui.storyIdx + 1, 0, clone(S.story)); S.ui.storyIdx++; S.account.highlights.forEach(h => { if (h.story > S.ui.storyIdx - 1) h.story++; }); S.feed.myStories = (S.feed.myStories || []).map(x => (x > S.ui.storyIdx - 1 ? x + 1 : x)); renderAll(); save(); toast('스토리를 복제했어요.'); return; }
   if (d.delPost != null) {
     if (!armed(t, '한 번 더 누르면 삭제')) return;
     S.posts.splice(S.ui.postIdx, 1); S.ui.postIdx = clamp(S.ui.postIdx, 0, S.posts.length - 1); renderAll(); save(); return;
@@ -1171,7 +1192,7 @@ document.addEventListener('click', e => {
     if (kind === 'my-story' || kind === 'friend-story') {
       const st = kind === 'friend-story' ? Object.assign(friendStory(), { owner: newOwner(friends) }) : newStory();
       S.stories.push(st); S.ui.storyIdx = S.stories.length - 1;
-      if (kind === 'my-story') S.feed.myStory = S.ui.storyIdx;
+      if (kind === 'my-story') S.feed.myStories = (S.feed.myStories || []).concat(S.ui.storyIdx);
       S.ui.tab = 'story';
     } else {
       const po = newPost(); if (kind === 'friend-post') { po.friend = true; po.owner = newOwner(friends); }
@@ -1223,6 +1244,7 @@ document.addEventListener('click', e => {
     if (d.kAct === 'center') { k.x = 50; k.y = 50; }
     renderAll(); save(); return;
   }
+  if (d.photoStep) { S.post.index = clamp(S.post.index + +d.photoStep, 0, S.post.photos.length - 1); renderAll(); save(); return; }
   if (d.cropReset) { const c = cropTarget(d.cropReset); if (c) { Object.assign(c, CROP0()); renderAll(); save(); } return; }
   if (d.link) { openLink(d.link); return; }
   if (t.id === 'link-ok') { applyLink(); return; }
@@ -1444,7 +1466,7 @@ let linkTarget = null;
 function normalizeImageURL(u) {
   u = u.trim();
   let m = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{10,})/);
-  if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w2000`;
+  if (m) return `https://lh3.googleusercontent.com/d/${m[1]}=w2000`;
   if (/dropbox\.com\//.test(u)) { try { const x = new URL(u); x.searchParams.delete('dl'); x.searchParams.set('raw', '1'); return x.toString(); } catch { return u; } }
   return u;
 }
@@ -1529,6 +1551,7 @@ body.v-lock { overflow: hidden; }
 .v-tt b { font-size: 16px; font-weight: 700; }
 .a-nav, .dc-foot { position: sticky; bottom: 0; z-index: 2; }
 .feed .f-body { overflow: visible; }
+.v-st .story { cursor: pointer; }
 .dmc.phone .dc-body { overflow-y: auto; justify-content: flex-start !important; }
 .dm-top [data-back], .dc-top [data-back] { cursor: pointer; display: flex; }
 [data-go], [data-open], [data-story], [data-car], [data-close] { cursor: pointer; }
@@ -1557,31 +1580,68 @@ const VIEWER_JS = `(function () {
   window.addEventListener('load', function () { all('.dc-body').forEach(function (b) { b.scrollTop = b.scrollHeight; }); });
   function closeAll() { all('.v-ov[data-closable]').forEach(function (o) { o.hidden = true; }); document.body.classList.remove('v-lock'); clearTimeout(timer); }
   function open(id) { var el = document.getElementById(id); if (!el) return null; el.hidden = false; document.body.classList.add('v-lock'); return el; }
-  function play(el) {
-    var b = el.querySelector('.s-bars b[data-cur]'); if (!b) return;
-    b.style.transition = 'none'; b.style.width = '0%'; void b.offsetWidth;
-    b.style.transition = 'width 5s linear'; b.style.width = '100%';
-    clearTimeout(timer); timer = setTimeout(closeAll, 5000);
+  // 스토리 이어 보기: 같은 사람의 스토리를 차례로, 5초마다 다음으로
+  var seq = [], pos = 0;
+  function showStory() {
+    clearTimeout(timer);
+    all('.v-st').forEach(function (o) { o.hidden = true; });
+    var el = open('ov-s-' + seq[pos]); if (!el) { closeAll(); return; }
+    var bars = el.querySelector('.s-bars'), b;
+    if (bars && bars._orig == null) bars._orig = bars.innerHTML;
+    if (bars && seq.length <= 1) bars.innerHTML = bars._orig;
+    if (bars && seq.length > 1) {
+      bars.innerHTML = seq.map(function (_, i) { return '<i><b style="width:' + (i < pos ? 100 : 0) + '%"' + (i === pos ? ' data-cur' : '') + '></b></i>'; }).join('');
+    }
+    b = el.querySelector('.s-bars b[data-cur]');
+    if (b && el.hasAttribute('data-auto')) {
+      b.style.transition = 'none'; b.style.width = '0%'; void b.offsetWidth;
+      b.style.transition = 'width 5s linear'; b.style.width = '100%';
+    }
+    if (el.hasAttribute('data-auto')) timer = setTimeout(function () { step(1); }, 5000);
   }
-  function slide(m, x) {
-    var imgs = m.querySelectorAll('img[data-ph]'), n = imgs.length, cur = 0;
-    for (var i = 0; i < n; i++) if (!imgs[i].hidden) cur = i;
-    var r = m.getBoundingClientRect(), nx = Math.max(0, Math.min(n - 1, cur + (x > r.left + r.width / 2 ? 1 : -1)));
-    for (var j = 0; j < n; j++) imgs[j].hidden = j !== nx;
-    var c = m.querySelector('.p-count'); if (c) c.textContent = (nx + 1) + '/' + n;
+  function step(d) {
+    pos += d;
+    if (pos >= seq.length) { closeAll(); return; }
+    if (pos < 0) pos = 0;
+    showStory();
+  }
+  // 여러 장 사진: 손가락으로 밀거나, 마우스로 누르면 넘어간다
+  function carIndex(track) { return Math.round(track.scrollLeft / Math.max(1, track.clientWidth)); }
+  function carSync(track) {
+    var n = track.children.length, i = carIndex(track), m = track.parentNode;
+    var c = m.querySelector('.p-count'); if (c) c.textContent = (i + 1) + '/' + n;
     var post = m.closest('.post'), dots = post ? post.querySelectorAll('.p-dots i') : [];
-    for (var k = 0; k < dots.length; k++) dots[k].className = k === Math.min(nx, dots.length - 1) ? 'on' : '';
+    for (var k = 0; k < dots.length; k++) dots[k].className = k === Math.min(i, dots.length - 1) ? 'on' : '';
   }
+  function carInit() {
+    all('.p-track').forEach(function (t) {
+      t.scrollLeft = (+t.getAttribute('data-start') || 0) * t.clientWidth;
+      if (!t._v) { t._v = 1; t.addEventListener('scroll', function () { carSync(t); }, { passive: true }); }
+      carSync(t);
+    });
+  }
+  window.addEventListener('load', carInit);
+  var lastPointer = 'mouse';
+  document.addEventListener('pointerdown', function (e) { lastPointer = e.pointerType; }, true);
   document.addEventListener('click', function (e) {
+    var st = e.target.closest('.v-st');
+    if (st && !e.target.closest('[data-close]')) { var r = st.getBoundingClientRect(); step(e.clientX < r.left + r.width / 3 ? -1 : 1); return; }
     var t = e.target.closest('[data-car],[data-close],[data-back],[data-go],[data-open],[data-story]'); if (!t) return;
-    if (t.hasAttribute('data-car')) slide(t, e.clientX);
+    if (t.hasAttribute('data-car')) {
+      if (lastPointer !== 'mouse') return;
+      var tr = t.querySelector('.p-track'), r2 = t.getBoundingClientRect();
+      if (tr) tr.scrollTo({ left: (carIndex(tr) + (e.clientX > r2.left + r2.width / 2 ? 1 : -1)) * tr.clientWidth, behavior: 'smooth' });
+    }
     else if (t.hasAttribute('data-close')) closeAll();
     else if (t.hasAttribute('data-back')) { var f = all('.v-scr')[0]; show(stack.pop() || (f && f.id), true); }
-    else if (t.getAttribute('data-go')) show(t.getAttribute('data-go'));
+    else if (t.getAttribute('data-go')) { show(t.getAttribute('data-go')); carInit(); }
     else if (t.getAttribute('data-open')) open('ov-c-' + t.getAttribute('data-open'));
-    else if (t.getAttribute('data-story')) { var el = open('ov-s-' + t.getAttribute('data-story')); if (el && el.hasAttribute('data-auto')) play(el); }
+    else if (t.getAttribute('data-story')) { seq = t.getAttribute('data-story').split(','); pos = 0; showStory(); }
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAll(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeAll();
+    if (seq.length && !document.getElementById('ov-s-' + seq[pos]).hidden) { if (e.key === 'ArrowRight') step(1); if (e.key === 'ArrowLeft') step(-1); }
+  });
 })();`;
 let igCSSCache = null;
 async function igCSS() {
@@ -1712,6 +1772,13 @@ function syncContactKind() {
   $('#contact-reply-row').hidden = kind !== '문의';
 }
 document.addEventListener('change', e => { if (e.target.id === 'contact-kind') syncContactKind(); });
+document.addEventListener('change', e => {
+  const el = e.target; if (el.dataset.myStory == null) return;
+  const i = +el.dataset.myStory, list = (S.feed.myStories || []).filter(x => x !== i);
+  if (el.checked) list.push(i);
+  S.feed.myStories = list.sort((a, b) => a - b);
+  renderPreview(); save();
+});
 function openContact() {
   $('#contact-msg').value = ''; $('#contact-reply').value = '';
   syncContactKind();
