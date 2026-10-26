@@ -1213,7 +1213,7 @@ document.addEventListener('click', e => {
   if (d.msgMv != null) { const a = S.dm.threads[S.dm.idx].messages, i = +d.msgMv, j = i + +d.d; if (j >= 0 && j < a.length) [a[i], a[j]] = [a[j], a[i]]; renderAll(); save(); return; }
   if (d.msgDel != null) { S.dm.threads[S.dm.idx].messages.splice(+d.msgDel, 1); renderAll(); save(); return; }
   if (d.msgImgClear != null) { S.dm.threads[S.dm.idx].messages[+d.msgImgClear].img = null; renderAll(); save(); return; }
-  if (t.id === 'contact-btn') { openContact(); return; }
+  if (t.id === 'qa-btn') { $('#qa-modal').hidden = false; return; }
   if (t.id === 'contact-send') { sendContact(); return; }
   if (d.closeModal != null) { t.closest('.modal').hidden = true; return; }
   if (d.themeSet) { S.ui.theme = d.themeSet; renderAll(); save(); return; }

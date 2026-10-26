@@ -249,6 +249,11 @@ input[type=checkbox]:checked::after { transform: scale(1); }
 .xbox li + li { margin-top: 4px; }
 .xbox p { margin: 8px 0 0; color: var(--mid); }
 
+.qa-list { display: flex; flex-direction: column; gap: 14px; overflow-y: auto; min-height: 0; }
+.qa p { margin: 0; font-size: 13px; line-height: 1.6; }
+.qa-q { font-weight: 700; color: var(--ink); }
+.qa-a { margin-top: 4px !important; color: var(--blue-d); }
+
 /* ───────── 인스타그램 UI ───────── */
 .ig {
   --ig-bg: #fff; --ig-ink: #000; --ig-sec: #737373; --ig-line: #dbdbdb; --ig-link: #00376b;
